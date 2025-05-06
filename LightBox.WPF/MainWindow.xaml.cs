@@ -71,24 +71,30 @@ namespace LightBox.WPF
                     if (!string.IsNullOrEmpty(exePath))
                     {
                         string solutionRootPath = Path.GetFullPath(Path.Combine(exePath, "..", "..", "..", ".."));
-                        string indexPath = Path.Combine(solutionRootPath, "LightBox.WebViewUI", "dist", "index.html");
-                        bool fileExists = File.Exists(indexPath);
+                        string distPath = Path.Combine(solutionRootPath, "LightBox.WebViewUI", "dist");
 
-                        _logger.LogInfo($"InitializeWebViewAsync - Attempting direct navigation to local file: {indexPath}");
-                        _logger.LogInfo($"InitializeWebViewAsync - Local file exists: {fileExists}");
-                        if (fileExists)
+                        if (Directory.Exists(distPath))
                         {
-                            webView.CoreWebView2.Navigate($"file:///{indexPath.Replace('\\', '/')}");
+                            _logger.LogInfo($"InitializeWebViewAsync - Mapping lightbox.app.local to {distPath}");
+                            webView.CoreWebView2.SetVirtualHostNameToFolderMapping(
+                                "lightbox.app.local", 
+                                distPath,             
+                                CoreWebView2HostResourceAccessKind.Allow 
+                            );
+                            _logger.LogInfo("InitializeWebViewAsync - Navigating to https://lightbox.app.local/index.html");
+                            webView.CoreWebView2.Navigate("https://lightbox.app.local/index.html");
                         }
                         else
                         {
-                            _logger.LogWarning($"InitializeWebViewAsync - Local index.html not found at {indexPath}. Navigating to Bing.");
+                            _logger.LogError($"InitializeWebViewAsync - distPath for SetVirtualHostNameToFolderMapping not found: {distPath}. Navigating to Bing.");
+                            MessageBox.Show($"Frontend 'dist' directory not found at: {distPath}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                             webView.CoreWebView2.Navigate("https://www.bing.com");
                         }
                     }
                     else
                     {
-                         _logger.LogError("InitializeWebViewAsync - exePath is null or empty. Navigating to Bing.");
+                         _logger.LogError("InitializeWebViewAsync - exePath is null or empty. Cannot set up virtual host. Navigating to Bing.");
+                         MessageBox.Show("Application executable path could not be determined. Cannot load local frontend.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                          webView.CoreWebView2.Navigate("https://www.bing.com");
                     }
                 }
