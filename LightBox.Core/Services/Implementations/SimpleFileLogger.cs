@@ -2,29 +2,41 @@ using LightBox.PluginContracts;
 using LightBox.Core.Services.Interfaces;
 using System;
 using System.IO;
-using System.Text; // For StringBuilder
+using System.Text; 
 
 namespace LightBox.Core.Services.Implementations
 {
     public class SimpleFileLogger : ILoggingService
     {
         private readonly string _logFilePath;
-        private readonly LogLevel _minimumLevel; // For basic filtering
+        private readonly LogLevel _minimumLevel;
         private static readonly object _lock = new object();
 
-        // Constructor could take log file path and minimum level from settings later
-        public SimpleFileLogger(string logFilePath = "Logs/lightbox_dev.log", LogLevel minimumLevel = LogLevel.Debug)
+        public SimpleFileLogger(string logFilePath = "", LogLevel minimumLevel = LogLevel.Debug)
         {
-            _logFilePath = Path.GetFullPath(logFilePath); // Ensure absolute path
+            if (string.IsNullOrEmpty(logFilePath))
+            {
+                string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
+                _logFilePath = Path.Combine(desktopPath, "LightBox_Debug.log");
+            }
+            else
+            {
+                _logFilePath = Path.GetFullPath(logFilePath);
+            }
+            
             _minimumLevel = minimumLevel;
 
             try
             {
                 Directory.CreateDirectory(Path.GetDirectoryName(_logFilePath));
+                // Initial log to confirm logger is working and path is correct.
+                // This internal call to Log needs to be careful if Log itself can throw before basic setup.
+                // For simplicity, we'll assume AppendAllText is robust enough for this initial message.
+                File.AppendAllText(_logFilePath, $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] [INFO] SimpleFileLogger initialized. Log file at: {_logFilePath}{Environment.NewLine}");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error creating log directory: {ex.Message}");
+                Console.WriteLine($"Error creating log directory or writing initial log: {ex.Message}");
             }
         }
 
@@ -52,11 +64,11 @@ namespace LightBox.Core.Services.Implementations
 
             string formattedMessage = logEntry.ToString();
 
-            Console.WriteLine(formattedMessage); // Always log to console
+            Console.WriteLine(formattedMessage); 
 
             try
             {
-                lock (_lock) // Basic thread safety for file writing
+                lock (_lock) 
                 {
                     File.AppendAllText(_logFilePath, formattedMessage + Environment.NewLine);
                 }
