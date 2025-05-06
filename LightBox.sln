@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LightBox.PluginContracts", "LightBox.PluginContracts\LightBox.PluginContracts.csproj", "{A60BB392-41A3-4F75-84C8-D7C6CAC8D115}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LightBox.Core", "LightBox.Core\LightBox.Core.csproj", "{CFF21CA5-82A1-4ADA-BBFC-BD33D53AF890}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LightBox.WPF", "LightBox.WPF\LightBox.WPF.csproj", "{D4F997E0-64E2-41F4-B5FE-337F2F0197BA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A60BB392-41A3-4F75-84C8-D7C6CAC8D115}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A60BB392-41A3-4F75-84C8-D7C6CAC8D115}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A60BB392-41A3-4F75-84C8-D7C6CAC8D115}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A60BB392-41A3-4F75-84C8-D7C6CAC8D115}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CFF21CA5-82A1-4ADA-BBFC-BD33D53AF890}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CFF21CA5-82A1-4ADA-BBFC-BD33D53AF890}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CFF21CA5-82A1-4ADA-BBFC-BD33D53AF890}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CFF21CA5-82A1-4ADA-BBFC-BD33D53AF890}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D4F997E0-64E2-41F4-B5FE-337F2F0197BA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D4F997E0-64E2-41F4-B5FE-337F2F0197BA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D4F997E0-64E2-41F4-B5FE-337F2F0197BA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D4F997E0-64E2-41F4-B5FE-337F2F0197BA}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
