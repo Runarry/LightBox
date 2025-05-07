@@ -1,0 +1,19 @@
+{
+  "id": "com.example.pluginB",
+  "name": "Plugin B (CSharp)",
+  "version": "0.9.0",
+  "description": "A C# library plugin example.",
+  "author": "Another Dev",
+  "plugin_type": "csharp_library",
+  "executable": "PluginB.dll",
+  "entry_point": "PluginB.MyPluginClass",
+  "config_schema": {
+    "type": "object",
+    "title": "Plugin B Configuration",
+    "properties": {
+      "connectionString": { "type": "string", "title": "Connection String" },
+      "timeout": { "type": "integer", "title": "Timeout (ms)", "default": 5000 }
+    }
+  },
+  "icon": "icons/plugin_b.svg"
+}

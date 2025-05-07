@@ -1,0 +1,23 @@
+{
+  "id": "com.example.pluginA",
+  "name": "Plugin A",
+  "version": "1.0.1",
+  "description": "This is the first test plugin.",
+  "author": "Test User",
+  "plugin_type": "external_process",
+  "executable": "pluginA/run.bat",
+  "args_template": "--port {port}",
+  "config_schema": {
+    "type": "object",
+    "title": "Plugin A Settings",
+    "properties": {
+      "setting1": { "type": "string", "title": "Setting One" },
+      "enabled": { "type": "boolean", "title": "Enabled", "default": false }
+    },
+    "required": ["setting1"]
+  },
+  "communication": {
+    "type": "stdio"
+  },
+  "icon": "pluginA/icon.png"
+}
