@@ -2,3 +2,18 @@ bin
 obj
 node_modules
 .vs
+dist/
+
+
+# Windows system files
+Thumbs.db
+ehthumbs.db
+
+# VSCode settings
+.vscode/
+
+.VSCodeCounter/
+cache/
+/config.json
+.roo/
+.roomodes
