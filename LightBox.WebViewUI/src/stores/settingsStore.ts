@@ -18,14 +18,26 @@ const useSettingsStore = create<SettingsState>((set, get) => ({
     isLoading: false,
     error: null,
     loadSettings: async () => {
+        console.log("settingsStore: loadSettings called"); // Added log
         set({ isLoading: true, error: null });
         try {
-            const settings = await getApplicationSettings();
-            set({ settings, isLoading: false });
+            const loadedSettings = await getApplicationSettings();
+            console.log("settingsStore: loadSettings received from getApplicationSettings:", loadedSettings); // Added log
+
+            if (loadedSettings && typeof loadedSettings.pluginScanDirectories === 'undefined') {
+                console.warn("settingsStore: 'pluginScanDirectories' is undefined in loadedSettings. Defaulting to empty array for the store.", loadedSettings);
+                set({ settings: { ...loadedSettings, pluginScanDirectories: [] }, isLoading: false });
+            } else if (loadedSettings && !Array.isArray(loadedSettings.pluginScanDirectories)) {
+                 console.warn("settingsStore: 'pluginScanDirectories' is not an array in loadedSettings. Defaulting to empty array. Value:", loadedSettings.pluginScanDirectories);
+                set({ settings: { ...loadedSettings, pluginScanDirectories: [] }, isLoading: false });
+            }
+            else {
+                set({ settings: loadedSettings, isLoading: false });
+            }
         } catch (err) {
             const error = err instanceof Error ? err.message : 'Failed to load settings';
+            console.error("settingsStore: Error in loadSettings:", error, err); // Log original error too
             set({ error, isLoading: false });
-            console.error(error);
         }
     },
     updateSettings: (partialSettings) => {

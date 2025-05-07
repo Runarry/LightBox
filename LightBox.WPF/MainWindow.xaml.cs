@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using System.Text.Json; // Added this using
 using System.Windows;
 using Microsoft.Web.WebView2.Core;
 using System.IO; 
@@ -16,6 +17,7 @@ namespace LightBox.WPF
         private readonly ILoggingService _logger;
         private readonly IApplicationSettingsService _applicationSettingsService;
         private readonly IPluginService _pluginService;
+        private LightBoxJsBridge? _jsBridge; // <--- Declare as a field
 
         public MainWindow()
         {
@@ -54,25 +56,15 @@ namespace LightBox.WPF
                 if (webView.CoreWebView2 != null)
                 {
                     _logger.LogInfo("InitializeWebViewAsync - CoreWebView2 is not null.");
-                    webView.CoreWebView2.Settings.AreDefaultContextMenusEnabled = false;
-                    webView.CoreWebView2.Settings.IsStatusBarEnabled = false;
-                    
-                    // Removed CoreWebView2InitializationCompleted event handler subscription
+                    webView.CoreWebView2.Settings.AreDefaultContextMenusEnabled = false; // Keep this
+                    webView.CoreWebView2.Settings.IsStatusBarEnabled = false; // Keep this
+                    webView.CoreWebView2.Settings.AreDevToolsEnabled = true; // Ensure DevTools are enabled
+                    webView.CoreWebView2.WebMessageReceived += CoreWebView2_WebMessageReceived; // Subscribe to WebMessageReceived
+                    webView.CoreWebView2.NavigationCompleted += CoreWebView2_NavigationCompleted; // Keep this for potential DevTools opening
 
-                    _logger.LogInfo("InitializeWebViewAsync - Attempting to add host object and open DevTools directly.");
-                    try
-                    {
-                        var jsBridge = new LightBoxJsBridge(_applicationSettingsService, _pluginService, _logger);
-                        webView.CoreWebView2.AddHostObjectToScript("lightboxBridge", jsBridge);
-                        _logger.LogInfo("InitializeWebViewAsync - lightboxBridge (LightBoxJsBridge) added successfully.");
-                        webView.CoreWebView2.OpenDevToolsWindow();
-                        _logger.LogInfo("InitializeWebViewAsync - DevTools opened successfully.");
-                    }
-                    catch (Exception bridgeEx)
-                    {
-                        _logger.LogError("InitializeWebViewAsync - Error adding host object or opening DevTools directly.", bridgeEx);
-                        MessageBox.Show($"Error setting up JSBridge/DevTools: {bridgeEx.Message}", "Bridge Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                    }
+                    // --- Remove AddHostObjectToScript logic ---
+                    // Ensure _jsBridge is initialized here or somewhere accessible by the message handler
+                    _jsBridge = new LightBoxJsBridge(_applicationSettingsService, _pluginService, _logger);
 
                     string? exePath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
                     if (!string.IsNullOrEmpty(exePath))
@@ -119,8 +111,112 @@ namespace LightBox.WPF
             _logger.LogInfo("InitializeWebViewAsync - End");
         }
 
-        // WebView_CoreWebView2InitializationCompleted method removed as it's no longer used.
+        private void CoreWebView2_NavigationCompleted(object? sender, CoreWebView2NavigationCompletedEventArgs e)
+        {
+            _logger.LogInfo("CoreWebView2_NavigationCompleted - Navigation completed.");
+            if (e.IsSuccess && webView?.CoreWebView2 != null)
+            {
+                 // Open DevTools after navigation if needed
+                 webView.CoreWebView2.OpenDevToolsWindow();
+                 _logger.LogInfo("CoreWebView2_NavigationCompleted - DevTools opened.");
+            } else if (!e.IsSuccess) {
+                 _logger.LogError($"CoreWebView2_NavigationCompleted - Navigation failed with error code: {e.WebErrorStatus}");
+            }
+        }
+
+        private async void CoreWebView2_WebMessageReceived(object? sender, CoreWebView2WebMessageReceivedEventArgs e)
+        {
+            // Use WebMessageAsJson when JS sends an object via postMessage
+            string messageJson = e.WebMessageAsJson;
+            if (string.IsNullOrEmpty(messageJson))
+            {
+                _logger.LogWarning("Received empty or null web message JSON.");
+                return;
+            }
+
+            _logger.LogDebug($"Received web message: {messageJson}");
+
+            try
+            {
+                var message = JsonSerializer.Deserialize<WebMessageRequest>(messageJson);
+                if (message == null || string.IsNullOrEmpty(message.Command))
+                {
+                    _logger.LogError("Failed to deserialize web message or command is missing.");
+                    return;
+                }
+
+                string? resultJson = null;
+                string? errorJson = null;
+
+                try
+                {
+                    if (_jsBridge == null)
+                    {
+                         throw new InvalidOperationException("JSBridge is not initialized.");
+                    }
+
+                    switch (message.Command)
+                    {
+                        case "getApplicationSettings":
+                            resultJson = await _jsBridge.GetApplicationSettings();
+                            _logger.LogDebug($"GetApplicationSettings resultJson: {resultJson}"); // Added log
+                            break;
+                        case "saveApplicationSettings":
+                            // Assuming SaveApplicationSettings now also returns Task or Task<string> for consistency or error reporting
+                            await _jsBridge.SaveApplicationSettings(message.Payload ?? string.Empty);
+                            resultJson = JsonSerializer.Serialize(new { success = true }); // Indicate success
+                            break;
+                        case "getAllPluginDefinitions":
+                            resultJson = await _jsBridge.GetAllPluginDefinitions();
+                            break;
+                        // Add other commands here
+                        default:
+                            throw new NotSupportedException($"Command '{message.Command}' is not supported.");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError($"Error executing command '{message.Command}': {ex.Message}", ex);
+                    errorJson = JsonSerializer.Serialize(new { message = ex.Message }); // Send back error message
+                }
+
+                // Send response back to JavaScript
+                var response = new WebMessageResponse
+                {
+                    CallbackId = message.CallbackId,
+                    Result = resultJson,
+                    Error = errorJson
+                };
+                // Serialize the response object to a JSON string first
+                string responseJson = JsonSerializer.Serialize(response);
+                 _logger.LogDebug($"Sending web message response: {responseJson}");
+                 // Pass the JSON string to PostWebMessageAsJson
+                webView?.CoreWebView2?.PostWebMessageAsJson(responseJson);
+
+            }
+            catch (JsonException jsonEx)
+            {
+                _logger.LogError($"Error deserializing web message JSON: {jsonEx.Message}", jsonEx);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Unexpected error processing web message: {ex.Message}", ex);
+            }
+        }
+    } // This closes the MainWindow class
+
+    // Helper classes for WebMessage structure
+    public class WebMessageRequest
+    {
+        public string Command { get; set; } = string.Empty;
+        public string? Payload { get; set; } // JSON string for arguments
+        public string CallbackId { get; set; } = string.Empty; // To match response with request
     }
 
-    // LightBoxJsBridgePlaceholder class removed as it's replaced by LightBoxJsBridge.
-}
+    public class WebMessageResponse
+    {
+        public string CallbackId { get; set; } = string.Empty;
+        public string? Result { get; set; } // JSON string of the result
+        public string? Error { get; set; } // JSON string of the error details
+    }
+} // This closes the namespace

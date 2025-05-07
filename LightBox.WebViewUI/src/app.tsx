@@ -1,5 +1,7 @@
-import { LocationProvider, Router, Route } from 'preact-iso'; // Removed Link
+import { useEffect } from 'preact/hooks'; // Import useEffect
+import { LocationProvider, Router, Route } from 'preact-iso';
 import './app.css';
+import { initLightboxApiService } from './services/lightboxApi'; // Import the init function
 
 // Import pages
 import { SettingsPage } from './pages/SettingsPage';
@@ -25,37 +27,31 @@ const NotFound = () => (
     </section>
 );
 
+import { getApplicationSettings, getAllPluginDefinitions } from './services/lightboxApi'; // Import the new API functions
+
 // Component to test JSBridge interactions (can be expanded or removed later)
 const JSBridgeTest = () => {
     const testGetSettings = async () => {
-        if (window.lightboxBridge?.getApplicationSettings) {
-            try {
-                const settingsJson = await window.lightboxBridge.getApplicationSettings();
-                console.log('Raw settings from bridge:', settingsJson);
-                const settings = JSON.parse(settingsJson);
-                alert('Application Settings:\n' + JSON.stringify(settings, null, 2));
-            } catch (e) {
-                console.error('Error getting settings via bridge:', e);
-                alert('Error getting settings: ' + (e instanceof Error ? e.message : String(e)));
-            }
-        } else {
-            alert('lightboxBridge.getApplicationSettings is not available.');
+        try {
+            // Use the imported function
+            const settings = await getApplicationSettings();
+            console.log('Settings from lightboxApi:', settings);
+            alert('Application Settings:\n' + JSON.stringify(settings, null, 2));
+        } catch (e) {
+            console.error('Error getting settings via lightboxApi:', e);
+            alert('Error getting settings: ' + (e instanceof Error ? e.message : String(e)));
         }
     };
 
     const testGetPlugins = async () => {
-        if (window.lightboxBridge?.getAllPluginDefinitions) {
-            try {
-                const pluginsJson = await window.lightboxBridge.getAllPluginDefinitions();
-                console.log('Raw plugins from bridge:', pluginsJson);
-                const plugins = JSON.parse(pluginsJson);
-                alert('Plugin Definitions:\n' + JSON.stringify(plugins, null, 2));
-            } catch (e) {
-                console.error('Error getting plugins via bridge:', e);
-                alert('Error getting plugins: ' + (e instanceof Error ? e.message : String(e)));
-            }
-        } else {
-            alert('lightboxBridge.getAllPluginDefinitions is not available.');
+        try {
+            // Use the imported function
+            const plugins = await getAllPluginDefinitions();
+            console.log('Plugins from lightboxApi:', plugins);
+            alert('Plugin Definitions:\n' + JSON.stringify(plugins, null, 2));
+        } catch (e) {
+            console.error('Error getting plugins via lightboxApi:', e);
+            alert('Error getting plugins: ' + (e instanceof Error ? e.message : String(e)));
         }
     };
     
@@ -70,6 +66,18 @@ const JSBridgeTest = () => {
 
 
 export function App() {
+    useEffect(() => {
+        // Initialize the API service when the App component mounts
+        initLightboxApiService().then(success => {
+            if (success) {
+                console.info("Lightbox API Service initialized successfully.");
+            } else {
+                console.error("Failed to initialize Lightbox API Service.");
+                // Optionally, display an error to the user or retry
+            }
+        });
+    }, []); // Empty dependency array ensures this runs only once on mount
+
     return (
         <LocationProvider>
             <div class="app">

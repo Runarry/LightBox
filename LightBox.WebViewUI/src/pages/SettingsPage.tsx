@@ -6,10 +6,19 @@ export function SettingsPage() {
     const [newScanDir, setNewScanDir] = useState('');
 
     useEffect(() => {
+        // --- Add logs ---
+        console.log("SettingsPage useEffect triggered.");
+        console.log("Current settings state:", settings);
+        console.log("Current isLoading state:", isLoading);
+        // --- End logs ---
+
         if (!settings && !isLoading) {
+            console.log("Condition met: Calling loadSettings()");
             loadSettings();
+        } else {
+            console.log("Condition NOT met: Skipping loadSettings()");
         }
-    }, [settings, isLoading, loadSettings]);
+    }, [settings, isLoading]); // Removed loadSettings from dependencies for testing
 
     const handleAddScanDir = () => {
         if (newScanDir.trim() !== '') {
@@ -36,23 +45,55 @@ export function SettingsPage() {
 
             <section>
                 <h3>Plugin Scan Directories</h3>
-                <ul>
-                    {settings.pluginScanDirectories.map((dir) => (
-                        <li key={dir}>
-                            {dir}{' '}
-                            <button onClick={() => removePluginScanDirectory(dir)}>Remove</button>
-                        </li>
-                    ))}
-                </ul>
-                <div>
+                {Array.isArray(settings.pluginScanDirectories) ? (
+                    <>
+                        <ul>
+                            {settings.pluginScanDirectories.map((dir) => (
+                                <li key={dir}>
+                                    {dir}{' '}
+                                    <button onClick={() => removePluginScanDirectory(dir)}>Remove</button>
+                                </li>
+                            ))}
+                        </ul>
+                        <div>
+                            <input
+                                type="text"
+                                value={newScanDir}
+                                onInput={(e) => setNewScanDir((e.target as HTMLInputElement).value)}
+                                placeholder="Add new scan directory"
+                            />
+                            <button onClick={handleAddScanDir}>Add Directory</button>
+                        </div>
+                    </>
+                ) : (
+                    <p>Plugin scan directories are not available or in an invalid format.</p>
+                    // Still provide a way to add a directory if the list is somehow corrupted/missing
+                )}
+                 {/* Moved the "Add Directory" part outside the conditional rendering of the list,
+                    or ensure it's available even if pluginScanDirectories is not an array initially.
+                    For simplicity, let's ensure the add functionality is always there if settings object exists.
+                 */}
+                {!Array.isArray(settings.pluginScanDirectories) && (
+                    <div>
+                        <input
+                            type="text"
+                            value={newScanDir}
+                            onInput={(e) => setNewScanDir((e.target as HTMLInputElement).value)}
+                            placeholder="Add new scan directory"
+                        />
+                        <button onClick={handleAddScanDir}>Add Directory</button>
+                    </div>
+                )}
+            </section>
+
+            {/* The following sections remain unchanged, but ensure they also handle potential undefined/null from settings if necessary */}
+            <section>
                     <input
                         type="text"
                         value={newScanDir}
                         onInput={(e) => setNewScanDir((e.target as HTMLInputElement).value)}
                         placeholder="Add new scan directory"
                     />
-                    <button onClick={handleAddScanDir}>Add Directory</button>
-                </div>
             </section>
 
             <section>

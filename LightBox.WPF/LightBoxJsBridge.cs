@@ -24,8 +24,9 @@ namespace LightBox.WPF
             _loggingService = loggingService ?? throw new ArgumentNullException(nameof(loggingService));
         }
 
-        public async Task<string> GetApplicationSettings()
+        public async Task<string> GetApplicationSettings() // Restored to async
         {
+            _loggingService.LogInfo("LightBoxJsBridge.GetApplicationSettings CALLED");
             try
             {
                 var settings = await _applicationSettingsService.LoadSettingsAsync();

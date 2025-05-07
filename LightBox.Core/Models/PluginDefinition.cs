@@ -40,9 +40,15 @@ namespace LightBox.Core.Models
         public JsonElement? ConfigSchema { get; set; } // Using JsonElement for flexibility
 
         [JsonPropertyName("communication")]
-        public string Communication { get; set; } = "stdio"; // Default to stdio
+        public CommunicationInfo Communication { get; set; } = new CommunicationInfo { Type = "stdio" }; // Changed type to CommunicationInfo
 
         [JsonPropertyName("icon")]
         public string? Icon { get; set; } // Path to icon file or base64 string
+    }
+
+    public class CommunicationInfo
+    {
+        [JsonPropertyName("type")]
+        public string Type { get; set; } = string.Empty;
     }
 }
