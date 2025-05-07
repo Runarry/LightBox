@@ -1,11 +1,17 @@
+/* Apply a natural box layout model to all elements, but allowing components to change */
+html {
+  box-sizing: border-box;
+}
+*, *:before, *:after {
+  box-sizing: inherit;
+}
+
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; /* Match app.css */
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  /* color-scheme removed, color and background-color are handled by app.css */
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -15,54 +21,33 @@
 
 a {
   font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
+  color: #007bff; /* Example link color */
+  text-decoration: none; /* Remove underline by default */
 }
 a:hover {
-  color: #535bf2;
+  color: #0056b3;
+  text-decoration: underline;
 }
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+  /* display: flex; place-items: center; min-width: 320px; removed */
+  /* min-height: 100vh; is effectively handled by app.css height: 100% */
+  /* Ensure body itself doesn't prevent #app from filling height */
+  height: 100%;
+  overflow: hidden; /* Prevent scrollbars on body if #app handles scrolling */
 }
 
 h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+  font-size: 2em; /* Adjusted default h1 size */
+  line-height: 1.2;
+  margin: 0.67em 0;
 }
 
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
+/* Removed default button styles from index.css to avoid conflicts with app.css */
+/* button { ... } */
+/* button:hover { ... } */
+/* button:focus, button:focus-visible { ... } */
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
-}
+/* Removed color scheme specific overrides for :root and button */
+/* @media (prefers-color-scheme: light) { ... } */
