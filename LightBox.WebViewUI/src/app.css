@@ -6,6 +6,7 @@ html, body, #app {
   background-color: #f0f2f5; /* A light grey background for the app */
   color: #333;
   overflow: hidden; /* Prevent body scrollbars if children manage their own */
+  width: -webkit-fill-available;
 }
 
 .app-container {
@@ -106,14 +107,32 @@ button.active {
 }
 
 .workspace-buttons button {
-  min-width: 40px; /* Ensure circle-like buttons have some width */
-  min-height: 40px;
-  border-radius: 50%; /* Circular buttons */
-  margin: 0 0.5rem;
-  font-size: 1.3rem; /* Increased font size for better icon visibility */
+  background-color: transparent;
+  border: none;
+  margin: 0 0.3rem; /* Slightly reduced margin */
+  padding: 0.4rem; /* Adjust padding as needed for icon size */
+  font-size: 1.5rem; /* Adjusted for potentially larger/clearer icons */
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
+  opacity: 0.7; /* Default non-active state */
+  filter: grayscale(100%);
+  transition: filter 0.2s ease-in-out, opacity 0.2s ease-in-out;
+  /* Remove min-width, min-height, border-radius as they are no longer forming a visible circle */
+}
+
+.workspace-buttons button:hover {
+  opacity: 1;
+  filter: grayscale(50%); /* Slightly less grayscale on hover for non-active */
+}
+
+.workspace-buttons button.active {
+  background-color: transparent !important; /* Ensure no background even from general button.active */
+  border: none !important;  /* Ensure no border even from general button.active */
+  color: inherit !important; /* Reset color if general button.active changed it */
+  opacity: 1;
+  filter: grayscale(0%); /* Full color for active icon */
 }
 
 /* Styles for MainContent elements */
