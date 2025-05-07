@@ -5,20 +5,27 @@ using System.IO;
 using System;
 using System.Reflection; 
 using System.Diagnostics; 
-using LightBox.Core.Services.Interfaces; 
-using LightBox.Core.Services.Implementations; 
+using LightBox.Core.Services.Interfaces;
+using LightBox.Core.Services.Implementations;
+using LightBox.Core.Models; // For ApplicationSettings, if needed directly, though likely not for instantiation here
 
 namespace LightBox.WPF
 {
     public partial class MainWindow : Window
     {
-        private readonly ILoggingService _logger; 
+        private readonly ILoggingService _logger;
+        private readonly IApplicationSettingsService _applicationSettingsService;
+        private readonly IPluginService _pluginService;
 
         public MainWindow()
         {
-            _logger = new SimpleFileLogger(); 
-            _logger.LogInfo("MainWindow constructor - Start");
-            InitializeComponent(); 
+            // Instantiate services
+            _logger = new SimpleFileLogger(); // Assuming default constructor or provide path
+            _applicationSettingsService = new ApplicationSettingsService(_logger); // Pass logger
+            _pluginService = new PluginManager(_applicationSettingsService, _logger); // Pass both services
+
+            _logger.LogInfo("MainWindow constructor - Start, services instantiated.");
+            InitializeComponent();
             _logger.LogInfo("MainWindow constructor - InitializeComponent completed.");
             InitializeWebViewAsync();
             _logger.LogInfo("MainWindow constructor - InitializeWebViewAsync called.");
@@ -50,14 +57,14 @@ namespace LightBox.WPF
                     webView.CoreWebView2.Settings.AreDefaultContextMenusEnabled = false;
                     webView.CoreWebView2.Settings.IsStatusBarEnabled = false;
                     
-                    webView.CoreWebView2InitializationCompleted += WebView_CoreWebView2InitializationCompleted;
-                    _logger.LogInfo("InitializeWebViewAsync - CoreWebView2InitializationCompleted event handler added.");
+                    // Removed CoreWebView2InitializationCompleted event handler subscription
 
                     _logger.LogInfo("InitializeWebViewAsync - Attempting to add host object and open DevTools directly.");
                     try
                     {
-                        webView.CoreWebView2.AddHostObjectToScript("lightboxBridge", new LightBoxJsBridgePlaceholder());
-                        _logger.LogInfo("InitializeWebViewAsync - lightboxBridge added successfully.");
+                        var jsBridge = new LightBoxJsBridge(_applicationSettingsService, _pluginService, _logger);
+                        webView.CoreWebView2.AddHostObjectToScript("lightboxBridge", jsBridge);
+                        _logger.LogInfo("InitializeWebViewAsync - lightboxBridge (LightBoxJsBridge) added successfully.");
                         webView.CoreWebView2.OpenDevToolsWindow();
                         _logger.LogInfo("InitializeWebViewAsync - DevTools opened successfully.");
                     }
@@ -66,7 +73,7 @@ namespace LightBox.WPF
                         _logger.LogError("InitializeWebViewAsync - Error adding host object or opening DevTools directly.", bridgeEx);
                         MessageBox.Show($"Error setting up JSBridge/DevTools: {bridgeEx.Message}", "Bridge Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     }
-                    
+
                     string? exePath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
                     if (!string.IsNullOrEmpty(exePath))
                     {
@@ -112,34 +119,8 @@ namespace LightBox.WPF
             _logger.LogInfo("InitializeWebViewAsync - End");
         }
 
-        private void WebView_CoreWebView2InitializationCompleted(object? sender, CoreWebView2InitializationCompletedEventArgs e)
-        {
-            _logger.LogInfo($"WebView_CoreWebView2InitializationCompleted - Event Fired. IsSuccess: {e.IsSuccess}");
-            if (e.IsSuccess)
-            {
-                if (webView.CoreWebView2 != null) 
-                {
-                    _logger.LogInfo("WebView_CoreWebView2InitializationCompleted - CoreWebView2 is not null (event).");
-                }
-                else
-                {
-                     _logger.LogError("WebView_CoreWebView2InitializationCompleted - CoreWebView2 is null in success branch (event).");
-                }
-            }
-            else
-            {
-                _logger.LogError($"WebView_CoreWebView2InitializationCompleted - WebView2 Core Initialization failed (event): {e.InitializationException?.Message}", e.InitializationException);
-            }
-            _logger.LogInfo("WebView_CoreWebView2InitializationCompleted - End (event)");
-        }
+        // WebView_CoreWebView2InitializationCompleted method removed as it's no longer used.
     }
 
-    public class LightBoxJsBridgePlaceholder
-    {
-        public string Echo(string message)
-        {
-            System.Diagnostics.Debug.WriteLine($"JSBridge Echo called with: {message}");
-            return $"C# says: '{message}' received!";
-        }
-    }
+    // LightBoxJsBridgePlaceholder class removed as it's replaced by LightBoxJsBridge.
 }
