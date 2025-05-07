@@ -1,6 +1,6 @@
-import { h } from 'preact';
+// import { h } from 'preact'; // Removed as it's usually not needed with modern JSX transforms
 import { useUIStore } from '../stores/uiStore';
-import './Modal.css'; // We'll create this CSS file next
+import './Modal.css';
 
 export const Modal = () => {
   const { isModalOpen, modalTitle, modalMessage, modalActions, hideModal } = useUIStore();
