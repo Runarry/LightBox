@@ -99,13 +99,120 @@ button.active {
 }
 
 /* Styles for bottom-bar elements */
+.workspace-buttons {
+  display: flex;
+  flex-direction: row;
+  align-items: center; /* Optional: if buttons can have varying heights */
+}
+
 .workspace-buttons button {
   min-width: 40px; /* Ensure circle-like buttons have some width */
   min-height: 40px;
   border-radius: 50%; /* Circular buttons */
   margin: 0 0.5rem;
-  font-size: 0.9rem;
+  font-size: 1.3rem; /* Increased font size for better icon visibility */
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* Styles for MainContent elements */
+.add-plugin-button {
+  display: block;
+  width: fit-content;
+  margin-bottom: 1rem;
+  padding: 0.6em 1.2em;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.add-plugin-button:hover {
+  background-color: #0056b3;
+}
+
+.plugin-grid {
+  display: grid;
+  /* Adjust minmax for smaller, square icon cards. E.g., aiming for ~60-80px cards */
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 0.75rem; /* Adjust gap for smaller cards */
+}
+
+.plugin-card {
+  background-color: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px; /* Slightly more rounded for a "button" feel */
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  cursor: pointer;
+  transition: box-shadow 0.2s ease-in-out, transform 0.2s ease-in-out;
+  display: flex;
+  align-items: center; /* Center icon vertically */
+  justify-content: center; /* Center icon horizontally */
+  aspect-ratio: 1 / 1; /* Make it a square */
+  padding: 0.5rem; /* Small padding around the icon */
+}
+
+.plugin-card:hover {
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  transform: translateY(-2px);
+}
+
+.plugin-card .plugin-icon {
+  font-size: 2.5rem; /* Larger icon size for icon-only card */
+  color: #333; /* Darker icon color */
+  /* margin and align-self are not needed due to parent flex centering */
+}
+
+/* h4 and p styles for .plugin-card are removed as they are no longer displayed in card mode */
+
+.plugin-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px; /* Small gap between list items */
+}
+
+.plugin-list-item {
+  background-color: white;
+  border: 1px solid #e7e7e7;
+  border-radius: 4px;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+}
+
+.plugin-list-item:hover {
+  background-color: #f8f9fa;
+  border-color: #d0d0d0;
+}
+
+.plugin-list-item .plugin-info-container {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem; /* Increased gap */
+}
+
+.plugin-list-item .plugin-icon {
+  font-size: 1.4rem; /* Slightly larger for list */
+  color: #555;
+}
+
+.plugin-list-item h5 {
+  margin: 0;
+  font-size: 1rem;
+  color: #2c3e50; /* Darker title */
+  font-weight: 500;
+}
+
+.plugin-list-item p {
+  margin: 0;
+  font-size: 0.85em;
+  color: #666;
 }
