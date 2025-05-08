@@ -1,0 +1,47 @@
+{
+  "appTitle": "LightBox",
+  "settings": "Settings",
+  "plugins": "Plugins",
+  "greeting": "Hello, {{name}}!",
+  "loading": "Loading...",
+  "actions": {
+    "save": "Save",
+    "cancel": "Cancel"
+  },
+  "settingsPage": {
+    "title": "Application Settings",
+    "language": "Language",
+    "pluginScanDirectories": "Plugin Scan Directories",
+    "pluginScanDirectoriesNotAvailable": "Plugin scan directories are not available or in an invalid format.",
+    "logFilePath": "Log File Path",
+    "logLevel": "Log Level",
+    "ipcApiPort": "IPC API Port",
+    "saveSettingsButton": "Save Settings",
+    "savingSettingsButton": "Saving...",
+    "addDirectoryButton": "Add Directory",
+    "removeButton": "Remove",
+    "addScanDirectoryPlaceholder": "Add new scan directory",
+    "ipcApiPortDescription": "Set to 0 for a random available port.",
+    "errorLoading": "Error loading settings: {{error}}",
+    "noSettings": "No settings loaded.",
+    "errorSaving": "Error saving settings: {{error}}"
+  },
+  "logLevels": {
+    "verbose": "Verbose",
+    "debug": "Debug",
+    "information": "Information",
+    "warning": "Warning",
+    "error": "Error",
+    "fatal": "Fatal"
+  },
+  "topbar": {
+    "logViewerTitle": "Log Viewer",
+    "logViewerMessage": "Log window functionality to be implemented.",
+    "cardViewAriaLabel": "Card View",
+    "cardViewTitle": "Card View",
+    "listViewAriaLabel": "List View",
+    "listViewTitle": "List View",
+    "openLogsAriaLabel": "Open Logs",
+    "openLogsTitle": "Open Logs"
+  }
+}

@@ -1,8 +1,12 @@
 import { useEffect, useState } from 'preact/hooks';
 import useSettingsStore from '../stores/settingsStore';
+import { useUIStore } from '../stores/uiStore'; // Import useUIStore
+import { useTranslation } from 'react-i18next'; // Import useTranslation
 
 export function SettingsPage() {
     const { settings, isLoading, error, loadSettings, updateSettings, saveSettings, addPluginScanDirectory, removePluginScanDirectory, setLogFilePath } = useSettingsStore();
+    const { currentLanguage, supportedLanguages, setLanguage } = useUIStore(); // Get i18n state and actions
+    const { t } = useTranslation(); // Get t function
     const [newScanDir, setNewScanDir] = useState('');
 
     useEffect(() => {
@@ -28,30 +32,39 @@ export function SettingsPage() {
     };
 
     if (isLoading && !settings) {
-        return <div>Loading settings...</div>;
+        return <div>{t('loading')}</div>; {/* Assuming 'loading' key exists or will be added */}
     }
 
     if (error) {
-        return <div>Error loading settings: {error}</div>;
+        return <div>{t('settingsPage.errorLoading', { error: error })}</div>; {/* Assuming 'settingsPage.errorLoading' key exists */}
     }
 
     if (!settings) {
-        return <div>No settings loaded.</div>;
+        return <div>{t('settingsPage.noSettings')}</div>; {/* Assuming 'settingsPage.noSettings' key exists */}
     }
 
     return (
         <div>
-            <h2>Application Settings</h2>
+            <h2>{t('settingsPage.title')}</h2>
 
             <section>
-                <h3>Plugin Scan Directories</h3>
+                <h3>{t('settingsPage.language')}</h3>
+                <select value={currentLanguage} onChange={(e) => setLanguage((e.target as HTMLSelectElement).value)}>
+                    {supportedLanguages.map(lang => (
+                        <option key={lang.code} value={lang.code}>{lang.name}</option>
+                    ))}
+                </select>
+            </section>
+
+            <section>
+                <h3>{t('settingsPage.pluginScanDirectories')}</h3>
                 {Array.isArray(settings.pluginScanDirectories) ? (
                     <>
                         <ul>
                             {settings.pluginScanDirectories.map((dir) => (
                                 <li key={dir}>
                                     {dir}{' '}
-                                    <button onClick={() => removePluginScanDirectory(dir)}>Remove</button>
+                                    <button onClick={() => removePluginScanDirectory(dir)}>{t('settingsPage.removeButton')}</button>
                                 </li>
                             ))}
                         </ul>
@@ -60,44 +73,36 @@ export function SettingsPage() {
                                 type="text"
                                 value={newScanDir}
                                 onInput={(e) => setNewScanDir((e.target as HTMLInputElement).value)}
-                                placeholder="Add new scan directory"
+                                placeholder={t('settingsPage.addScanDirectoryPlaceholder')}
                             />
-                            <button onClick={handleAddScanDir}>Add Directory</button>
+                            <button onClick={handleAddScanDir}>{t('settingsPage.addDirectoryButton')}</button>
                         </div>
                     </>
                 ) : (
-                    <p>Plugin scan directories are not available or in an invalid format.</p>
-                    // Still provide a way to add a directory if the list is somehow corrupted/missing
+                    <p>{t('settingsPage.pluginScanDirectoriesNotAvailable', 'Plugin scan directories are not available or in an invalid format.')}</p>
                 )}
-                 {/* Moved the "Add Directory" part outside the conditional rendering of the list,
-                    or ensure it's available even if pluginScanDirectories is not an array initially.
-                    For simplicity, let's ensure the add functionality is always there if settings object exists.
-                 */}
+                {/*
+                  The following block for adding a directory when pluginScanDirectories is not an array
+                  is somewhat redundant if the goal is to always show the add interface.
+                  Consider simplifying the logic to always show the add input if settings object exists,
+                  or ensure the initial state of pluginScanDirectories is always an array.
+                  For now, keeping the logic as it was, but with translations.
+                */}
                 {!Array.isArray(settings.pluginScanDirectories) && (
-                    <div>
-                        <input
-                            type="text"
-                            value={newScanDir}
-                            onInput={(e) => setNewScanDir((e.target as HTMLInputElement).value)}
-                            placeholder="Add new scan directory"
-                        />
-                        <button onClick={handleAddScanDir}>Add Directory</button>
-                    </div>
-                )}
-            </section>
-
-            {/* The following sections remain unchanged, but ensure they also handle potential undefined/null from settings if necessary */}
-            <section>
-                    <input
-                        type="text"
-                        value={newScanDir}
-                        onInput={(e) => setNewScanDir((e.target as HTMLInputElement).value)}
-                        placeholder="Add new scan directory"
-                    />
+                     <div>
+                         <input
+                             type="text"
+                             value={newScanDir}
+                             onInput={(e) => setNewScanDir((e.target as HTMLInputElement).value)}
+                             placeholder={t('settingsPage.addScanDirectoryPlaceholder')}
+                         />
+                         <button onClick={handleAddScanDir}>{t('settingsPage.addDirectoryButton')}</button>
+                     </div>
+                 )}
             </section>
 
             <section>
-                <h3>Log File Path</h3>
+                <h3>{t('settingsPage.logFilePath')}</h3>
                 <input
                     type="text"
                     value={settings.logFilePath}
@@ -106,22 +111,23 @@ export function SettingsPage() {
             </section>
             
             <section>
-                <h3>Log Level</h3>
-                <select 
-                    value={settings.logLevel} 
+                <h3>{t('settingsPage.logLevel')}</h3>
+                <select
+                    value={settings.logLevel}
                     onChange={(e) => updateSettings({ logLevel: (e.target as HTMLSelectElement).value })}
                 >
-                    <option value="Verbose">Verbose</option>
-                    <option value="Debug">Debug</option>
-                    <option value="Information">Information</option>
-                    <option value="Warning">Warning</option>
-                    <option value="Error">Error</option>
-                    <option value="Fatal">Fatal</option>
+                    {/* It's better to translate these options as well if they are user-facing */}
+                    <option value="Verbose">{t('logLevels.verbose', 'Verbose')}</option>
+                    <option value="Debug">{t('logLevels.debug', 'Debug')}</option>
+                    <option value="Information">{t('logLevels.information', 'Information')}</option>
+                    <option value="Warning">{t('logLevels.warning', 'Warning')}</option>
+                    <option value="Error">{t('logLevels.error', 'Error')}</option>
+                    <option value="Fatal">{t('logLevels.fatal', 'Fatal')}</option>
                 </select>
             </section>
 
             <section>
-                <h3>IPC API Port</h3>
+                <h3>{t('settingsPage.ipcApiPort')}</h3>
                 <input
                     type="number"
                     value={settings.ipcApiPort}
@@ -130,13 +136,13 @@ export function SettingsPage() {
                         updateSettings({ ipcApiPort: isNaN(port) ? 0 : port });
                     }}
                 />
-                <p><small>Set to 0 for a random available port.</small></p>
+                <p><small>{t('settingsPage.ipcApiPortDescription')}</small></p>
             </section>
 
             <button onClick={saveSettings} disabled={isLoading}>
-                {isLoading ? 'Saving...' : 'Save Settings'}
+                {isLoading ? t('settingsPage.savingSettingsButton') : t('settingsPage.saveSettingsButton')}
             </button>
-            {error && <p style={{ color: 'red' }}>Error saving settings: {error}</p>}
+            {error && <p style={{ color: 'red' }}>{t('settingsPage.errorSaving', { error: error })}</p>} {/* Assuming key exists */}
         </div>
     );
 }

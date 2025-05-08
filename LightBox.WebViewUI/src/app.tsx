@@ -10,43 +10,39 @@ import { Modal } from './components/Modal'; // Import Modal component
 type Workspace = { id: string; name: string; icon?: string; }; // Added icon property
 type PluginInstance = { id: string; name: string; type: string; icon?: string; };
 
+import { useTranslation } from 'react-i18next'; // Import useTranslation
+
 // --- TopBar Component ---
 const TopBar = () => {
-  // const [viewMode, setViewMode] = useState<ViewMode>('card'); // Removed local state
-  const { viewMode, setViewMode } = useUIStore(); // Use Zustand store
-
-  // toggleViewMode is now directly using setViewMode from the store
-  // const toggleViewMode = (mode: UIStoreViewMode) => {
-  //   setViewMode(mode);
-  //   console.log("View mode set to:", mode);
-  // };
-
-  const { showModal } = useUIStore(); // Get showModal for use in this component
+  const { viewMode, setViewMode, showModal, currentLanguage, supportedLanguages, setLanguage } = useUIStore(); // Use Zustand store, include i18n states
+  const { t } = useTranslation(); // For potential future translations in TopBar
 
   const handleOpenLogs = () => {
     // TODO: Implement log window opening
     console.log("Open logs clicked");
-    showModal("Log Viewer", "Log window functionality to be implemented.");
+    showModal(t('topbar.logViewerTitle', "Log Viewer"), t('topbar.logViewerMessage', "Log window functionality to be implemented."));
   };
 
   return (
     <div class="top-bar">
       <div class="top-bar-left">
-        <span class="app-title">LightBox</span>
+        <span class="app-title">{t('appTitle', 'LightBox')}</span>
         <div class="view-switch-buttons">
-          <button 
-            onClick={() => setViewMode('card')} 
+          <button
+            onClick={() => setViewMode('card')}
             class={viewMode === 'card' ? 'active' : ''}
-            aria-label="Card View"
+            aria-label={t('topbar.cardViewAriaLabel', "Card View")}
+            title={t('topbar.cardViewTitle', "Card View")}
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
               <path d="M1 2.5A1.5 1.5 0 0 1 2.5 1h3A1.5 1.5 0 0 1 7 2.5v3A1.5 1.5 0 0 1 5.5 7h-3A1.5 1.5 0 0 1 1 5.5v-3zm8 0A1.5 1.5 0 0 1 10.5 1h3A1.5 1.5 0 0 1 15 2.5v3A1.5 1.5 0 0 1 13.5 7h-3A1.5 1.5 0 0 1 9 5.5v-3zm-8 8A1.5 1.5 0 0 1 2.5 9h3A1.5 1.5 0 0 1 7 10.5v3A1.5 1.5 0 0 1 5.5 15h-3A1.5 1.5 0 0 1 1 13.5v-3zm8 0A1.5 1.5 0 0 1 10.5 9h3A1.5 1.5 0 0 1 15 10.5v3A1.5 1.5 0 0 1 13.5 15h-3A1.5 1.5 0 0 1 9 13.5v-3z"/>
             </svg>
           </button>
-          <button 
-            onClick={() => setViewMode('list')} 
+          <button
+            onClick={() => setViewMode('list')}
             class={viewMode === 'list' ? 'active' : ''}
-            aria-label="List View"
+            aria-label={t('topbar.listViewAriaLabel', "List View")}
+            title={t('topbar.listViewTitle', "List View")}
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
               <path fill-rule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5z"/>
@@ -54,12 +50,28 @@ const TopBar = () => {
           </button>
         </div>
       </div>
-      <div class="global-log-button">
-        <button onClick={handleOpenLogs} aria-label="Open Logs">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
-            <path d="M0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2zm5.5 10.5a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 0-1H6a.5.5 0 0 0-.5.5zm0-2a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 0-1H6a.5.5 0 0 0-.5.5zm0-2a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 0-1H6a.5.5 0 0 0-.5.5zm0-2a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 0-1H6a.5.5 0 0 0-.5.5zm-2 4a.5.5 0 0 0 .5.5h.793l.5.5.5-.5h.793a.5.5 0 0 0 0-1H4a.5.5 0 0 0-.5.5zm0-2a.5.5 0 0 0 .5.5h.793l.5.5.5-.5h.793a.5.5 0 0 0 0-1H4a.5.5 0 0 0-.5.5zm0-2a.5.5 0 0 0 .5.5h.793l.5.5.5-.5h.793a.5.5 0 0 0 0-1H4a.5.5 0 0 0-.5.5zm0-2a.5.5 0 0 0 .5.5h.793l.5.5.5-.5h.793a.5.5 0 0 0 0-1H4a.5.5 0 0 0-.5.5z"/>
-          </svg>
-        </button>
+      <div class="top-bar-right"> {/* Changed class for better grouping */}
+        <div class="language-switcher-container"> {/* Container for styling */}
+          {supportedLanguages && supportedLanguages.length > 0 && (
+            <select
+              value={currentLanguage}
+              onChange={(e) => setLanguage((e.target as HTMLSelectElement).value)}
+              aria-label={t('settingsPage.language', "Select Language")} /* Reusing existing key */
+              class="language-select" /* Added class for styling */
+            >
+              {supportedLanguages.map(lang => (
+                <option key={lang.code} value={lang.code}>{lang.name}</option>
+              ))}
+            </select>
+          )}
+        </div>
+        <div class="global-log-button">
+          <button onClick={handleOpenLogs} aria-label={t('topbar.openLogsAriaLabel', "Open Logs")} title={t('topbar.openLogsTitle', "Open Logs")}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
+              <path d="M0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2zm5.5 10.5a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 0-1H6a.5.5 0 0 0-.5.5zm0-2a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 0-1H6a.5.5 0 0 0-.5.5zm0-2a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 0-1H6a.5.5 0 0 0-.5.5zm0-2a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 0-1H6a.5.5 0 0 0-.5.5zm-2 4a.5.5 0 0 0 .5.5h.793l.5.5.5-.5h.793a.5.5 0 0 0 0-1H4a.5.5 0 0 0-.5.5zm0-2a.5.5 0 0 0 .5.5h.793l.5.5.5-.5h.793a.5.5 0 0 0 0-1H4a.5.5 0 0 0-.5.5zm0-2a.5.5 0 0 0 .5.5h.793l.5.5.5-.5h.793a.5.5 0 0 0 0-1H4a.5.5 0 0 0-.5.5zm0-2a.5.5 0 0 0 .5.5h.793l.5.5.5-.5h.793a.5.5 0 0 0 0-1H4a.5.5 0 0 0-.5.5z"/>
+            </svg>
+          </button>
+        </div>
       </div>
     </div>
   );

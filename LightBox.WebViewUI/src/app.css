@@ -71,6 +71,37 @@ button.active {
   align-items: center;
 }
 
+.top-bar-right { /* Added this class in app.tsx for better grouping */
+  display: flex;
+  align-items: center;
+}
+
+.language-switcher-container {
+  margin-right: 0.5rem; /* Space between language switcher and log button */
+}
+
+.language-select {
+  padding: 0.35rem 0.5rem;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  background-color: #fff; /* White background to match top-bar */
+  font-size: 0.875rem; /* Slightly smaller font */
+  cursor: pointer;
+  outline: none;
+  height: calc(1.5em + 0.75rem + 2px); /* Match button height approx */
+  line-height: 1.5;
+}
+
+.language-select:hover {
+  border-color: #aaa;
+}
+
+.language-select:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+}
+
+
 .app-title {
   font-size: 1.5rem;
   font-weight: bold;
@@ -83,7 +114,10 @@ button.active {
   margin-left: 0.5rem;
   background: none;
   border: 1px solid transparent; /* Make border transparent initially */
-  padding: 0.4rem 0.6rem;
+  padding: 0.4rem 0.6rem; /* Ensure this padding results in a good height */
+  display: flex; /* For aligning icon inside */
+  align-items: center;
+  justify-content: center;
 }
 
 .view-switch-buttons button:hover,

@@ -1,0 +1,47 @@
+{
+  "appTitle": "光盒",
+  "settings": "设置",
+  "plugins": "插件",
+  "greeting": "你好，{{name}}！",
+  "loading": "加载中...",
+  "actions": {
+    "save": "保存",
+    "cancel": "取消"
+  },
+  "settingsPage": {
+    "title": "应用设置",
+    "language": "语言",
+    "pluginScanDirectories": "插件扫描目录",
+    "pluginScanDirectoriesNotAvailable": "插件扫描目录不可用或格式无效。",
+    "logFilePath": "日志文件路径",
+    "logLevel": "日志级别",
+    "ipcApiPort": "IPC API 端口",
+    "saveSettingsButton": "保存设置",
+    "savingSettingsButton": "保存中...",
+    "addDirectoryButton": "添加目录",
+    "removeButton": "移除",
+    "addScanDirectoryPlaceholder": "添加新的扫描目录",
+    "ipcApiPortDescription": "设置为 0 可使用随机可用端口。",
+    "errorLoading": "加载设置错误：{{error}}",
+    "noSettings": "未加载任何设置。",
+    "errorSaving": "保存设置错误：{{error}}"
+  },
+  "logLevels": {
+    "verbose": "详细",
+    "debug": "调试",
+    "information": "信息",
+    "warning": "警告",
+    "error": "错误",
+    "fatal": "致命"
+  },
+  "topbar": {
+    "logViewerTitle": "日志查看器",
+    "logViewerMessage": "日志窗口功能待实现。",
+    "cardViewAriaLabel": "卡片视图",
+    "cardViewTitle": "卡片视图",
+    "listViewAriaLabel": "列表视图",
+    "listViewTitle": "列表视图",
+    "openLogsAriaLabel": "打开日志",
+    "openLogsTitle": "打开日志"
+  }
+}
