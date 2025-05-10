@@ -9,7 +9,7 @@ import {
     type Workspace,
     type WorkspaceInfo,
 } from '../services/lightboxApi';
-import { useUIStore } from './uiStore'; // For potential interaction like closing modal on success
+// import { useUIStore } from './uiStore'; // For potential interaction like closing modal on success // TODO: [UI Refactor] uiStore.ts was removed, replace with new UI interaction logic if needed
 
 interface WorkspaceState {
     workspaces: WorkspaceInfo[];
@@ -57,7 +57,8 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
                 workspaces: [...state.workspaces, newWorkspace],
             }));
             // Optionally, close the modal via uiStore
-            useUIStore.getState().closeWorkspaceModal();
+            // TODO: [UI Refactor] uiStore.ts was removed. Implement alternative for closing modal.
+            // useUIStore.getState().closeWorkspaceModal();
             return newWorkspace;
         } catch (err) {
             console.error("Failed to create workspace:", err);
@@ -119,7 +120,8 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
                 activeWorkspace: state.activeWorkspace?.id === workspace.id ? workspace : state.activeWorkspace,
             }));
             // Optionally, close the modal via uiStore
-            useUIStore.getState().closeWorkspaceModal();
+            // TODO: [UI Refactor] uiStore.ts was removed. Implement alternative for closing modal.
+            // useUIStore.getState().closeWorkspaceModal();
         } catch (err) {
             console.error(`Failed to update workspace ${workspace.id}:`, err);
             set({ error: (err as Error).message || `Failed to update workspace ${workspace.id}` });
@@ -133,46 +135,31 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
             // const confirmed = window.confirm(`Are you sure you want to delete workspace ${workspaceId}?`);
             // if (!confirmed) return;
             
-            // For now, we'll use the uiStore's modal for confirmation
-            const uiActions = useUIStore.getState();
-            uiActions.showModal(
-                'Confirm Deletion',
-                `Are you sure you want to delete workspace ${workspaceId}? This action cannot be undone.`,
-                [
-                    {
-                        label: 'Cancel',
-                        onClick: () => uiActions.hideModal(),
-                        className: 'secondary'
-                    },
-                    {
-                        label: 'Delete',
-                        onClick: async () => {
-                            uiActions.hideModal(); // Close confirmation modal first
-                            set({ isLoadingWorkspaces: true }); // Indicate loading state
-                            try {
-                                await apiDeleteWorkspace(workspaceId);
-                                set((state) => ({
-                                    workspaces: state.workspaces.filter((ws) => ws.id !== workspaceId),
-                                    activeWorkspace: state.activeWorkspace?.id === workspaceId ? null : state.activeWorkspace,
-                                    activeWorkspaceId: state.activeWorkspaceId === workspaceId ? null : state.activeWorkspaceId,
-                                    isLoadingWorkspaces: false,
-                                }));
-                                console.info(`Workspace ${workspaceId} deleted.`);
-                            } catch (errInner) {
-                                console.error(`Failed to delete workspace ${workspaceId} after confirmation:`, errInner);
-                                set({ error: (errInner as Error).message || `Failed to delete workspace ${workspaceId}`, isLoadingWorkspaces: false });
-                                // Show error to user
-                                uiActions.showModal('Error', `Failed to delete workspace: ${(errInner as Error).message}`);
-                            }
-                        },
-                        className: 'danger'
-                    }
-                ]
-            );
+            // TODO: [UI Refactor] uiStore.ts was removed. Implement proper confirmation and error handling for delete.
+            // For now, deletion will proceed without UI confirmation.
+            // const uiActions = useUIStore.getState();
+            // uiActions.showModal( ... );
 
-        } catch (err) { // This catch block might be redundant if confirmation handles its own errors
+            // Directly attempt deletion
+            set({ isLoadingWorkspaces: true }); // Indicate loading state
+            try {
+                await apiDeleteWorkspace(workspaceId);
+                set((state) => ({
+                    workspaces: state.workspaces.filter((ws) => ws.id !== workspaceId),
+                    activeWorkspace: state.activeWorkspace?.id === workspaceId ? null : state.activeWorkspace,
+                    activeWorkspaceId: state.activeWorkspaceId === workspaceId ? null : state.activeWorkspaceId,
+                    isLoadingWorkspaces: false,
+                }));
+                console.info(`Workspace ${workspaceId} deleted.`);
+            } catch (errInner) {
+                console.error(`Failed to delete workspace ${workspaceId}:`, errInner);
+                set({ error: (errInner as Error).message || `Failed to delete workspace ${workspaceId}`, isLoadingWorkspaces: false });
+                // TODO: [UI Refactor] uiStore.ts was removed. Implement alternative for showing error to user.
+                // uiActions.showModal('Error', `Failed to delete workspace: ${(errInner as Error).message}`);
+            }
+
+        } catch (err) {
             console.error(`Error initiating deletion for workspace ${workspaceId}:`, err);
-            // This error is more about the process of *initiating* deletion, not the deletion itself if using modal.
             set({ error: (err as Error).message || `Failed to initiate deletion for workspace ${workspaceId}` });
         }
     },

@@ -1,7 +1,6 @@
 import { render } from 'preact';
 import { Suspense } from 'preact/compat'; // Import Suspense
-import './index.css';
-import { App } from './app.tsx';
+import App from './App'; // 导入新的 App 组件
 import './i18n'; // 初始化 i18next
 import { I18nextProvider } from 'react-i18next';
 import i18n from './i18n'; // 导入配置好的 i18n 实例
