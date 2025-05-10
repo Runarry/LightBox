@@ -17,6 +17,7 @@ namespace LightBox.WPF
         private readonly ILoggingService _logger;
         private readonly IApplicationSettingsService _applicationSettingsService;
         private readonly IPluginService _pluginService;
+        private readonly IWorkspaceService _workspaceService; // Added
         private LightBoxJsBridge? _jsBridge; // <--- Declare as a field
 
         public MainWindow()
@@ -25,6 +26,7 @@ namespace LightBox.WPF
             _logger = new SimpleFileLogger(); // Assuming default constructor or provide path
             _applicationSettingsService = new ApplicationSettingsService(_logger); // Pass logger
             _pluginService = new PluginManager(_applicationSettingsService, _logger); // Pass both services
+            _workspaceService = new WorkspaceManager(_applicationSettingsService, _logger); // Added
 
             _logger.LogInfo("MainWindow constructor - Start, services instantiated.");
             InitializeComponent();
@@ -64,7 +66,7 @@ namespace LightBox.WPF
 
                     // --- Remove AddHostObjectToScript logic ---
                     // Ensure _jsBridge is initialized here or somewhere accessible by the message handler
-                    _jsBridge = new LightBoxJsBridge(_applicationSettingsService, _pluginService, _logger);
+                    _jsBridge = new LightBoxJsBridge(_applicationSettingsService, _pluginService, _logger, _workspaceService); // Added _workspaceService
 
                     string? exePath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
                     if (!string.IsNullOrEmpty(exePath))
@@ -81,7 +83,7 @@ namespace LightBox.WPF
                                 CoreWebView2HostResourceAccessKind.Allow 
                             );
                             _logger.LogInfo("InitializeWebViewAsync - Navigating to https://lightbox.app.local/index.html");
-                            webView.CoreWebView2.Navigate("https://lightbox.app.local/index.html");
+                            webView.CoreWebView2.Navigate("http://lightbox.app.local/index.html");
                         }
                         else
                         {
@@ -169,7 +171,41 @@ namespace LightBox.WPF
                         case "getAllPluginDefinitions":
                             resultJson = await _jsBridge.GetAllPluginDefinitions();
                             break;
-                        // Add other commands here
+                        // Workspace commands
+                        case "getWorkspaces":
+                            resultJson = await _jsBridge.GetWorkspaces();
+                            break;
+                        case "createWorkspace":
+                            // Assuming payload for createWorkspace is: { "name": "string", "icon": "string" }
+                            var createArgs = JsonSerializer.Deserialize<CreateWorkspaceArgs>(message.Payload ?? "{}");
+                            if (createArgs == null || string.IsNullOrEmpty(createArgs.Name))
+                                throw new ArgumentException("Invalid payload for createWorkspace. Name is required.");
+                            resultJson = await _jsBridge.CreateWorkspace(createArgs.Name, createArgs.Icon ?? string.Empty);
+                            break;
+                        case "setActiveWorkspace":
+                            // Assuming payload for setActiveWorkspace is: { "workspaceId": "string" }
+                            var setActiveArgs = JsonSerializer.Deserialize<SetActiveWorkspaceArgs>(message.Payload ?? "{}");
+                            if (setActiveArgs == null || string.IsNullOrEmpty(setActiveArgs.WorkspaceId))
+                                throw new ArgumentException("Invalid payload for setActiveWorkspace. WorkspaceId is required.");
+                            await _jsBridge.SetActiveWorkspace(setActiveArgs.WorkspaceId);
+                            resultJson = JsonSerializer.Serialize(new { success = true });
+                            break;
+                        case "getActiveWorkspace":
+                            resultJson = await _jsBridge.GetActiveWorkspace();
+                            break;
+                        case "updateWorkspace":
+                            // Payload is the workspace JSON string
+                            await _jsBridge.UpdateWorkspace(message.Payload ?? string.Empty);
+                            resultJson = JsonSerializer.Serialize(new { success = true });
+                            break;
+                        case "deleteWorkspace":
+                            // Assuming payload for deleteWorkspace is: { "workspaceId": "string" }
+                             var deleteArgs = JsonSerializer.Deserialize<DeleteWorkspaceArgs>(message.Payload ?? "{}");
+                            if (deleteArgs == null || string.IsNullOrEmpty(deleteArgs.WorkspaceId))
+                                throw new ArgumentException("Invalid payload for deleteWorkspace. WorkspaceId is required.");
+                            await _jsBridge.DeleteWorkspace(deleteArgs.WorkspaceId);
+                            resultJson = JsonSerializer.Serialize(new { success = true });
+                            break;
                         default:
                             throw new NotSupportedException($"Command '{message.Command}' is not supported.");
                     }
@@ -219,4 +255,20 @@ namespace LightBox.WPF
         public string? Result { get; set; } // JSON string of the result
         public string? Error { get; set; } // JSON string of the error details
     }
+
+    // Helper classes for command payloads
+    internal class CreateWorkspaceArgs
+    {
+        public string Name { get; set; } = string.Empty;
+        public string? Icon { get; set; }
+    }
+    internal class SetActiveWorkspaceArgs
+    {
+        public string WorkspaceId { get; set; } = string.Empty;
+    }
+    internal class DeleteWorkspaceArgs
+    {
+        public string WorkspaceId { get; set; } = string.Empty;
+    }
+
 } // This closes the namespace

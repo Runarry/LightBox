@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import i18n from '../i18n'; // 导入 i18next 实例
+import type { Workspace, WorkspaceInfo } from '../services/lightboxApi'; // 引入工作区类型
 
 export type ViewMode = 'card' | 'list';
 
@@ -27,6 +28,18 @@ interface UIState extends ModalState {
   currentLanguage: string;
   supportedLanguages: { code: string; name: string }[];
   setLanguage: (language: string) => void;
+
+  // Workspace Modal specific state
+  isWorkspaceModalOpen: boolean;
+  editingWorkspace: WorkspaceInfo | Workspace | null; // For pre-filling the form
+  openWorkspaceModal: (workspace?: WorkspaceInfo | Workspace | null) => void;
+  closeWorkspaceModal: () => void;
+
+  // Workspace Panel visibility
+  isWorkspacePanelOpen: boolean;
+  toggleWorkspacePanel: () => void;
+  openWorkspacePanel: () => void;
+  closeWorkspacePanel: () => void;
 }
 
 export const useUIStore = create<UIState>((set, get) => ({
@@ -70,11 +83,23 @@ export const useUIStore = create<UIState>((set, get) => ({
        }
      }))
    }),
- hideModal: () => set({ isModalOpen: false, modalTitle: '', modalMessage: '', modalActions: [] }),
+  hideModal: () => set({ isModalOpen: false, modalTitle: '', modalMessage: '', modalActions: [] }),
+
+  // Workspace Modal actions
+  isWorkspaceModalOpen: false,
+  editingWorkspace: null,
+  openWorkspaceModal: (workspace = null) => set({ isWorkspaceModalOpen: true, editingWorkspace: workspace }),
+  closeWorkspaceModal: () => set({ isWorkspaceModalOpen: false, editingWorkspace: null }),
+
+  // Workspace Panel actions
+  isWorkspacePanelOpen: false, // Default to closed
+  toggleWorkspacePanel: () => set((state) => ({ isWorkspacePanelOpen: !state.isWorkspacePanelOpen })),
+  openWorkspacePanel: () => set({ isWorkspacePanelOpen: true }),
+  closeWorkspacePanel: () => set({ isWorkspacePanelOpen: false }),
 }));
 
 // 监听 i18next 的 languageChanged 事件，确保 store 与 i18next 状态同步
 // 这在通过浏览器检测器或其他方式改变语言时尤其重要
 i18n.on('languageChanged', (lng) => {
- useUIStore.setState({ currentLanguage: lng });
+  useUIStore.setState({ currentLanguage: lng });
 });

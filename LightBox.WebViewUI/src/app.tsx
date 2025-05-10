@@ -1,21 +1,30 @@
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect } from 'preact/hooks';
 import './app.css'; // Styles for the new layout
 import { initLightboxApiService } from './services/lightboxApi';
 import { useUIStore } from './stores/uiStore'; // Import store
-import { Modal } from './components/Modal'; // Import Modal component
-// import type { ViewMode as UIStoreViewMode } from './stores/uiStore'; // Import type - Removed as unused
+// Modal component from uiStore is now for generic alerts/confirms.
+// WorkspaceModal is specific and self-contained, rendered by WorkspacePanel.
+// import { Modal } from './components/Modal'; // This Modal is the generic one.
+import WorkspacePanel from './components/workspace/WorkspacePanel'; // Import WorkspacePanel
+import { Icon } from './components/common/Icon'; // Import Icon component
 
 // Placeholder types for now, will be refined
 // type ViewMode = 'card' | 'list'; // This is now in uiStore.ts
-type Workspace = { id: string; name: string; icon?: string; }; // Added icon property
+// type Workspace = { id: string; name: string; icon?: string; }; // This type is now in lightboxApi.ts
 type PluginInstance = { id: string; name: string; type: string; icon?: string; };
 
 import { useTranslation } from 'react-i18next'; // Import useTranslation
 
 // --- TopBar Component ---
 const TopBar = () => {
-  const { viewMode, setViewMode, showModal, currentLanguage, supportedLanguages, setLanguage } = useUIStore(); // Use Zustand store, include i18n states
-  const { t } = useTranslation(); // For potential future translations in TopBar
+  const viewMode = useUIStore(state => state.viewMode);
+  const setViewMode = useUIStore(state => state.setViewMode);
+  const showModal = useUIStore(state => state.showModal);
+  const currentLanguage = useUIStore(state => state.currentLanguage);
+  const supportedLanguages = useUIStore(state => state.supportedLanguages);
+  const setLanguage = useUIStore(state => state.setLanguage);
+  const toggleWorkspacePanel = useUIStore(state => state.toggleWorkspacePanel);
+  const { t } = useTranslation();
 
   const handleOpenLogs = () => {
     // TODO: Implement log window opening
@@ -26,6 +35,9 @@ const TopBar = () => {
   return (
     <div class="top-bar">
       <div class="top-bar-left">
+        <button onClick={toggleWorkspacePanel} class="workspace-toggle-button" title={t('topbar.toggleWorkspaces', "Toggle Workspaces")}>
+          <Icon name="workspaces" />
+        </button>
         <span class="app-title">{t('appTitle', 'LightBox')}</span>
         <div class="view-switch-buttons">
           <button
@@ -34,9 +46,7 @@ const TopBar = () => {
             aria-label={t('topbar.cardViewAriaLabel', "Card View")}
             title={t('topbar.cardViewTitle', "Card View")}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
-              <path d="M1 2.5A1.5 1.5 0 0 1 2.5 1h3A1.5 1.5 0 0 1 7 2.5v3A1.5 1.5 0 0 1 5.5 7h-3A1.5 1.5 0 0 1 1 5.5v-3zm8 0A1.5 1.5 0 0 1 10.5 1h3A1.5 1.5 0 0 1 15 2.5v3A1.5 1.5 0 0 1 13.5 7h-3A1.5 1.5 0 0 1 9 5.5v-3zm-8 8A1.5 1.5 0 0 1 2.5 9h3A1.5 1.5 0 0 1 7 10.5v3A1.5 1.5 0 0 1 5.5 15h-3A1.5 1.5 0 0 1 1 13.5v-3zm8 0A1.5 1.5 0 0 1 10.5 9h3A1.5 1.5 0 0 1 15 10.5v3A1.5 1.5 0 0 1 13.5 15h-3A1.5 1.5 0 0 1 9 13.5v-3z"/>
-            </svg>
+            <Icon name="card-view" />
           </button>
           <button
             onClick={() => setViewMode('list')}
@@ -44,9 +54,7 @@ const TopBar = () => {
             aria-label={t('topbar.listViewAriaLabel', "List View")}
             title={t('topbar.listViewTitle', "List View")}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
-              <path fill-rule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5z"/>
-            </svg>
+            <Icon name="list-view" />
           </button>
         </div>
       </div>
@@ -67,9 +75,7 @@ const TopBar = () => {
         </div>
         <div class="global-log-button">
           <button onClick={handleOpenLogs} aria-label={t('topbar.openLogsAriaLabel', "Open Logs")} title={t('topbar.openLogsTitle', "Open Logs")}>
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
-              <path d="M0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2zm5.5 10.5a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 0-1H6a.5.5 0 0 0-.5.5zm0-2a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 0-1H6a.5.5 0 0 0-.5.5zm0-2a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 0-1H6a.5.5 0 0 0-.5.5zm0-2a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 0-1H6a.5.5 0 0 0-.5.5zm-2 4a.5.5 0 0 0 .5.5h.793l.5.5.5-.5h.793a.5.5 0 0 0 0-1H4a.5.5 0 0 0-.5.5zm0-2a.5.5 0 0 0 .5.5h.793l.5.5.5-.5h.793a.5.5 0 0 0 0-1H4a.5.5 0 0 0-.5.5zm0-2a.5.5 0 0 0 .5.5h.793l.5.5.5-.5h.793a.5.5 0 0 0 0-1H4a.5.5 0 0 0-.5.5zm0-2a.5.5 0 0 0 .5.5h.793l.5.5.5-.5h.793a.5.5 0 0 0 0-1H4a.5.5 0 0 0-.5.5z"/>
-            </svg>
+            <Icon name="logs" />
           </button>
         </div>
       </div>
@@ -169,84 +175,77 @@ const MainContent = () => {
 
 // --- BottomBar Component ---
 const BottomBar = () => {
-  const { showModal: showBottomBarModal } = useUIStore(); // Alias to avoid conflict if needed, or ensure context
-  // Mock data for now
-  const workspaces: Workspace[] = [
-    { id: 'ws1', name: 'Project Alpha', icon: '🚀' },
-    { id: 'ws2', name: 'Sandbox Environment', icon: '🧪' },
-    { id: 'ws3', name: 'Game Design Docs', icon: '🎮' },
-    { id: 'ws4', name: 'Notes', icon: '📋' },
-  ];
-  const [activeWorkspace, setActiveWorkspace] = useState<string>('ws1');
-
-  const handleWorkspaceClick = (workspaceId: string) => {
-    setActiveWorkspace(workspaceId);
-    console.log("Workspace changed to:", workspaceId);
-  };
-
-  const handleWorkspaceRightClick = (event: MouseEvent, workspaceId: string) => {
-    event.preventDefault();
-    console.log("Right-clicked on workspace:", workspaceId);
-    // Example for workspace context menu using the modal
-    const ws = workspaces.find(w => w.id === workspaceId);
-    showBottomBarModal(
-      `Workspace: ${ws?.name || workspaceId}`,
-      "Select workspace action:",
-      [
-        { label: 'Rename', onClick: () => showBottomBarModal("Rename", `Rename functionality for ${ws?.name} to be implemented.`) },
-        { label: 'Delete', onClick: () => showBottomBarModal("Delete", `Delete confirmation for ${ws?.name} to be implemented.`, [{label: "Confirm Delete", onClick: () => console.log("Delete confirmed for", ws?.name), className: 'danger'}, {label: "Cancel", onClick: () => useUIStore.getState().hideModal()} ]) },
-        { label: 'Cancel', onClick: () => useUIStore.getState().hideModal(), className: 'secondary' }
-      ]
-    );
-  };
-  
-  const handleAddWorkspace = () => {
-    console.log("Add workspace clicked");
-    showBottomBarModal("Add Workspace", "Functionality to add a new workspace (max 5) to be implemented.");
-  };
+  // This component might be removed or simplified if WorkspacePanel handles all workspace interactions.
+  // For now, let's keep it minimal or as a status bar.
+  const { t } = useTranslation();
+  // Potentially display active workspace name here from workspaceStore
+  // const { activeWorkspace } = useWorkspaceStore(state => ({ activeWorkspace: state.activeWorkspace }));
 
   return (
     <div class="bottom-bar">
-      <div class="workspace-buttons">
-        {workspaces.map(ws => (
-          <button 
-            key={ws.id} 
-            onClick={() => handleWorkspaceClick(ws.id)}
-            onContextMenu={(e) => handleWorkspaceRightClick(e, ws.id)}
-            class={activeWorkspace === ws.id ? 'active' : ''}
-            title={ws.name}
-          >
-            {ws.icon || ws.name.charAt(0).toUpperCase()}
-          </button>
-        ))}
-        {workspaces.length < 5 && (
-          <button onClick={handleAddWorkspace} title="Add new workspace" aria-label="Add new workspace" style={{ fontSize: '1.2rem' }}>
-            +
-          </button>
-        )}
-      </div>
+      {/* {activeWorkspace ? <span>{t('bottombar.activeWorkspace', "Active Workspace:")} {activeWorkspace.name}</span> : <span>{t('bottombar.noActiveWorkspace', "No active workspace")}</span>} */}
+      <span>{t('bottombar.statusReady', "Ready")}</span>
     </div>
   );
 };
 
 // --- App Component ---
 export function App() {
+  console.log("【App 组件】App 组件函数体执行");
+  // 避免 selector 死循环：分别调用 useUIStore
+  const isModalOpen = useUIStore(state => state.isModalOpen);
+  const modalTitle = useUIStore(state => state.modalTitle);
+  const modalMessage = useUIStore(state => state.modalMessage);
+  const modalActions = useUIStore(state => state.modalActions);
+  const hideModal = useUIStore(state => state.hideModal);
+  const isWorkspacePanelOpen = useUIStore(state => state.isWorkspacePanelOpen);
+  const closeWorkspacePanel = useUIStore(state => state.closeWorkspacePanel);
+  
   useEffect(() => {
+    console.log("【App 组件】useEffect 初始化执行");
     initLightboxApiService().then(success => {
       if (success) {
         console.info("Lightbox API Service initialized successfully.");
+        // Potentially load initial data like workspaces or active workspace here
+        // useWorkspaceStore.getState().loadWorkspaces();
+        // useWorkspaceStore.getState().loadActiveWorkspace(); // if an ID might be pre-set
       } else {
         console.error("Failed to initialize Lightbox API Service.");
+        // Show a global error modal?
+        useUIStore.getState().showModal("Initialization Error", "Failed to connect to the backend service. Some features may not work.");
       }
     });
+    // console.log("【App 组件】initLightboxApiService 调用已再次注释"); // Re-enable the call
   }, []);
 
+  console.log("【App 组件】准备执行 return 语句");
   return (
     <div class="app-container">
-      <TopBar />
+      {/* {console.log("【App 组件】开始渲染 return 内容")} */}
+      <TopBar /> {/* TopBar will now use toggleWorkspacePanel from uiStore directly */}
+      <WorkspacePanel isVisible={isWorkspacePanelOpen} onClose={closeWorkspacePanel} />
       <MainContent />
       <BottomBar />
-      <Modal /> {/* Render Modal component at the top level */}
+      {/* Generic Modal for alerts/confirmations from uiStore */}
+      {isModalOpen && (
+        <div class="modal-overlay" onClick={hideModal}>
+            <div class="modal-content" onClick={(e) => e.stopPropagation()}>
+                {modalTitle && <div class="modal-header"><h2>{modalTitle}</h2></div>}
+                <div class="modal-body">
+                    {typeof modalMessage === 'string' ? <p>{modalMessage}</p> : modalMessage}
+                </div>
+                {modalActions && modalActions.length > 0 && (
+                    <div class="modal-footer">
+                        {modalActions.map((action, index) => (
+                            <button key={index} onClick={action.onClick} class={`modal-button ${action.className || ''}`}>
+                                {action.label}
+                            </button>
+                        ))}
+                    </div>
+                )}
+            </div>
+        </div>
+      )}
     </div>
   );
 }

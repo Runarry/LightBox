@@ -1,30 +1,41 @@
-// import { h } from 'preact'; // Removed as it's usually not needed with modern JSX transforms
-import { useUIStore } from '../stores/uiStore';
+// import { h } from 'preact'; // Removed unused import h
+import type { ComponentChildren } from 'preact'; // Corrected import for type
 import './Modal.css';
 
-export const Modal = () => {
-  const { isModalOpen, modalTitle, modalMessage, modalActions, hideModal } = useUIStore();
+// This Modal is the generic one driven by uiStore for simple alerts/confirmations.
+// The WorkspaceModal will be a more specific modal.
+// We might need to differentiate or enhance this Modal if it's to be used by WorkspaceModal directly
+// or if WorkspaceModal should implement its own modal structure.
 
-  if (!isModalOpen) {
+// For now, let's assume WorkspaceModal will use this Modal component.
+// This means this Modal needs to accept children and other props.
+
+interface ModalProps {
+  show: boolean;
+  onClose: () => void;
+  title?: string;
+  children: ComponentChildren; // To allow content to be passed into the modal
+  footer?: ComponentChildren; // Optional footer content
+}
+
+export const Modal = ({ show, onClose, title, children, footer }: ModalProps) => {
+  if (!show) {
     return null;
   }
 
   return (
-    <div class="modal-overlay" onClick={hideModal}> {/* Optional: click overlay to close */}
+    <div class="modal-overlay" onClick={onClose}>
       <div class="modal-content" onClick={(e) => e.stopPropagation()}>
-        {modalTitle && <div class="modal-header">
-          <h2>{modalTitle}</h2>
+        {title && <div class="modal-header">
+          <h2>{title}</h2>
+          <button onClick={onClose} class="modal-close-button">&times;</button>
         </div>}
         <div class="modal-body">
-          {typeof modalMessage === 'string' ? <p>{modalMessage}</p> : modalMessage}
+          {children}
         </div>
-        {modalActions && modalActions.length > 0 && (
+        {footer && (
           <div class="modal-footer">
-            {modalActions.map((action, index) => (
-              <button key={index} onClick={action.onClick} class={`modal-button ${action.className || ''}`}>
-                {action.label}
-              </button>
-            ))}
+            {footer}
           </div>
         )}
       </div>

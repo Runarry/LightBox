@@ -31,6 +31,40 @@ export interface PluginDefinition {
     // error?: string; // Error should be handled by the promise rejection
 }
 
+/**
+ * 工作区基本信息 (对应 C# WorkspaceInfo)
+ */
+export interface WorkspaceInfo {
+    id: string;
+    name: string;
+    filePath: string;
+    icon: string;
+    lastOpened: string; // DateTime is typically string in JSON
+}
+
+/**
+ * 插件实例入口 (对应 C# PluginInstanceEntry)
+ */
+export interface PluginInstanceEntry {
+    instanceId: string;
+    pluginId: string;
+    configuration: any;
+    status: string;
+    lastErrorMessage?: string;
+}
+
+/**
+ * 完整工作区数据 (对应 C# Workspace)
+ */
+export interface Workspace {
+    id: string;
+    name: string;
+    description: string;
+    icon: string;
+    pluginInstances: PluginInstanceEntry[];
+}
+
+
 interface WebMessageResponse {
     CallbackId: string;
     Result?: string; // JSON string
@@ -73,7 +107,13 @@ function initializeWebMessageListenerInternal() {
                         console.error(`Error from C# for ${response.CallbackId}:`, errorDetails.message);
                         pendingPromises[response.CallbackId].reject(new Error(errorDetails.message || "Unknown error from C#"));
                     } else if (response.Result !== undefined && response.Result !== null) { // response.Result is still a JSON string from C#
-                        pendingPromises[response.CallbackId].resolve(JSON.parse(response.Result));
+                        try {
+                            pendingPromises[response.CallbackId].resolve(JSON.parse(response.Result));
+                        } catch (parseError) {
+                            console.error(`Failed to parse Result JSON from C# for ${response.CallbackId}:`, response.Result, parseError);
+                            const errorToReject = parseError instanceof Error ? parseError : new Error(String(parseError));
+                            pendingPromises[response.CallbackId].reject(new Error(`Failed to parse result from C#: ${errorToReject.message}`));
+                        }
                     } else {
                         pendingPromises[response.CallbackId].resolve(undefined); // For calls that don't return data, like save.
                     }
@@ -209,6 +249,117 @@ export async function getAllPluginDefinitions(): Promise<PluginDefinition[]> {
         throw error;
     }
 }
+
+// --- Workspace Management API Calls ---
+
+/**
+ * 获取所有工作区信息列表
+ */
+export async function getWorkspaces(): Promise<WorkspaceInfo[]> {
+    console.info("Requesting workspaces via WebMessage...");
+    try {
+        const workspaces = await sendMessageToCSharp<WorkspaceInfo[]>("getWorkspaces");
+        console.info("Workspaces loaded successfully via WebMessage:", workspaces);
+        return workspaces || []; // Ensure an array is returned
+    } catch (error) {
+        console.error("Error requesting getWorkspaces via WebMessage:", error);
+        throw error;
+    }
+}
+
+/**
+ * 创建新的工作区
+ * @param name 工作区名称
+ * @param icon 工作区图标
+ */
+export async function createWorkspace(name: string, icon: string): Promise<WorkspaceInfo> {
+    console.info(`Creating workspace "${name}" via WebMessage...`);
+    try {
+        const newWorkspaceInfo = await sendMessageToCSharp<WorkspaceInfo>("createWorkspace", { name, icon });
+        console.info("Workspace created successfully via WebMessage:", newWorkspaceInfo);
+        return newWorkspaceInfo;
+    } catch (error) {
+        console.error(`Error creating workspace "${name}" via WebMessage:`, error);
+        throw error;
+    }
+}
+
+/**
+ * 设置当前活动工作区
+ * @param workspaceId 要激活的工作区ID
+ */
+export async function setActiveWorkspace(workspaceId: string): Promise<void> {
+    console.info(`Setting active workspace to "${workspaceId}" via WebMessage...`);
+    try {
+        await sendMessageToCSharp<void>("setActiveWorkspace", { workspaceId });
+        console.info(`Active workspace set to "${workspaceId}" successfully via WebMessage.`);
+    } catch (error) {
+        console.error(`Error setting active workspace to "${workspaceId}" via WebMessage:`, error);
+        throw error;
+    }
+}
+
+/**
+ * 获取当前活动工作区的详细信息
+ */
+export async function getActiveWorkspace(): Promise<Workspace | null> {
+    console.info("Requesting active workspace via WebMessage...");
+    try {
+        const activeWorkspace = await sendMessageToCSharp<Workspace | null>("getActiveWorkspace");
+        console.info("Active workspace loaded successfully via WebMessage:", activeWorkspace);
+        return activeWorkspace;
+    } catch (error) {
+        console.warn("Error or special condition encountered in getActiveWorkspace:", error);
+
+        if (error instanceof Error) {
+            const errorMessage = error.message.toLowerCase();
+            // Check for parsing errors or explicit "no active workspace" messages
+            if (errorMessage.includes("failed to parse result from c#") ||
+                errorMessage.includes("unexpected token") || // Catches JSON.parse('') and other direct parse failures
+                errorMessage.includes("json.parse") || // More general parsing error messages
+                errorMessage.includes("no active workspace")) {  // Explicit message from C#
+                console.info("getActiveWorkspace: Interpreting error as 'no active workspace'. Returning null. Original error:", error.message);
+                return null;
+            }
+        }
+       
+        // For other types of errors, re-throw.
+        console.error("getActiveWorkspace: Unhandled error, re-throwing:", error);
+        throw error;
+    }
+}
+
+/**
+ * 更新工作区信息
+ * @param workspace 要更新的工作区对象 (完整 Workspace 对象)
+ */
+export async function updateWorkspace(workspace: Workspace): Promise<void> {
+    console.info(`Updating workspace "${workspace.id}" via WebMessage...`);
+    try {
+        // JSBridge侧接收的是JSON字符串，sendMessageToCSharp 内部会处理 payload 的序列化
+        await sendMessageToCSharp<void>("updateWorkspace", workspace);
+        console.info(`Workspace "${workspace.id}" updated successfully via WebMessage.`);
+    } catch (error) {
+        console.error(`Error updating workspace "${workspace.id}" via WebMessage:`, error);
+        throw error;
+    }
+}
+
+/**
+ * 删除工作区
+ * @param workspaceId 要删除的工作区ID
+ */
+export async function deleteWorkspace(workspaceId: string): Promise<void> {
+    console.info(`Deleting workspace "${workspaceId}" via WebMessage...`);
+    try {
+        await sendMessageToCSharp<void>("deleteWorkspace", { workspaceId });
+        console.info(`Workspace "${workspaceId}" deleted successfully via WebMessage.`);
+    } catch (error) {
+        console.error(`Error deleting workspace "${workspaceId}" via WebMessage:`, error);
+        throw error;
+    }
+}
+
 
 // Remove global declaration for window.lightboxBridge as it's no longer used
 // declare global {

@@ -1,0 +1,93 @@
+.workspace-list-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border-color, #eee);
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out;
+    position: relative; /* For actions menu positioning */
+}
+
+.workspace-list-item:hover {
+    background-color: var(--hover-bg-color, #f9f9f9);
+}
+
+.workspace-list-item.active {
+    background-color: var(--active-bg-color, #e6f7ff);
+    font-weight: bold;
+    border-left: 3px solid var(--primary-color, #007bff);
+    padding-left: calc(1rem - 3px);
+}
+
+.workspace-item-icon {
+    margin-right: 0.75rem;
+    font-size: 1.2em; /* Adjust as needed */
+    min-width: 24px; /* Ensure space for icon */
+    text-align: center;
+}
+
+.workspace-item-name {
+    flex-grow: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.workspace-item-actions {
+    margin-left: auto;
+    position: relative; /* For menu positioning */
+}
+
+.more-options-button {
+    background: none;
+    border: none;
+    color: var(--text-color-secondary, #555);
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    font-size: 1.1em;
+    line-height: 1;
+    border-radius: 4px;
+}
+
+.more-options-button:hover {
+    background-color: var(--button-hover-bg-color, #e0e0e0);
+    color: var(--text-color, #333);
+}
+
+.actions-menu {
+    position: absolute;
+    top: 100%; /* Position below the button */
+    right: 0;
+    background-color: white;
+    border: 1px solid var(--border-color-light, #ddd);
+    border-radius: 4px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    z-index: 100;
+    min-width: 120px;
+    padding: 0.25rem 0;
+}
+
+.actions-menu button {
+    display: block;
+    width: 100%;
+    padding: 0.6rem 1rem;
+    text-align: left;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: var(--text-color, #333);
+}
+
+.actions-menu button:hover {
+    background-color: var(--hover-bg-color, #f0f0f0);
+}
+
+.actions-menu button.delete {
+    color: var(--danger-color, #dc3545);
+}
+
+.actions-menu button.delete:hover {
+    background-color: var(--danger-hover-bg-color, #f8d7da);
+    color: var(--danger-hover-color, #721c24);
+}
