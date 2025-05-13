@@ -1,3 +1,33 @@
+// 定义与 C# 模型匹配的 JavaScript 结构 (不再是 TypeScript 接口)
+
+/**
+ * 应用程序设置
+ */
+// export interface ApplicationSettings { ... } // Removed TS interface
+
+/**
+ * 插件定义
+ */
+// export interface PluginDefinition { ... } // Removed TS interface
+
+/**
+ * 工作区基本信息 (对应 C# WorkspaceInfo)
+ */
+// export interface WorkspaceInfo { ... } // Removed TS interface
+
+/**
+ * 插件实例入口 (对应 C# PluginInstanceEntry)
+ */
+// export interface PluginInstanceEntry { ... } // Removed TS interface
+
+/**
+ * 完整工作区数据 (对应 C# Workspace)
+ */
+// export interface Workspace { ... } // Removed TS interface
+
+
+// interface WebMessageResponse { ... } // Removed TS interface
+
 const pendingPromises = {};
 
 function generateGuid() {
@@ -286,3 +316,10 @@ export async function deleteWorkspace(workspaceId) {
         throw error;
     }
 }
+
+// Remove global declaration for window.lightboxBridge as it's no longer used
+// declare global {
+//     interface Window {
+//         // lightboxBridge is no longer used
+//     }
+// }

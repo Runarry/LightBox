@@ -1,19 +1,9 @@
 import { create } from 'zustand';
-import { type ApplicationSettings, getApplicationSettings, saveApplicationSettings } from '../services/lightboxApi';
+import { getApplicationSettings, saveApplicationSettings } from '../services/lightboxApi';
 
-interface SettingsState {
-    settings: ApplicationSettings | null;
-    isLoading: boolean;
-    error: string | null;
-    loadSettings: () => Promise<void>;
-    updateSettings: (partialSettings: Partial<ApplicationSettings>) => void;
-    saveSettings: () => Promise<void>;
-    addPluginScanDirectory: (directory: string) => void;
-    removePluginScanDirectory: (directory: string) => void;
-    setLogFilePath: (path: string) => void;
-}
+// interface SettingsState { ... } // Removed TS interface
 
-const useSettingsStore = create<SettingsState>((set, get) => ({
+const useSettingsStore = create((set, get) => ({
     settings: null,
     isLoading: false,
     error: null,

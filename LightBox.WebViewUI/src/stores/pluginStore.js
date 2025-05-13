@@ -1,14 +1,9 @@
 import { create } from 'zustand';
-import { type PluginDefinition, getAllPluginDefinitions } from '../services/lightboxApi';
+import { getAllPluginDefinitions } from '../services/lightboxApi';
 
-interface PluginState {
-    plugins: PluginDefinition[];
-    isLoading: boolean;
-    error: string | null;
-    loadPlugins: () => Promise<void>;
-}
+// interface PluginState { ... } // Removed TS interface
 
-const usePluginStore = create<PluginState>((set) => ({
+const usePluginStore = create((set) => ({
     plugins: [],
     isLoading: false,
     error: null,
