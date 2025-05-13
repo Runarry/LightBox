@@ -1,14 +1,13 @@
 import App from './App.svelte';
 import { initLightboxApiService } from './services/lightboxApi';
+import { mount } from 'svelte';
 
 // 初始化与后端的通信服务
 initLightboxApiService().then(initialized => {
     if (initialized) {
         console.log("Lightbox API service initialized successfully.");
         // 创建 Svelte 应用实例
-        const app = new App({
-            target: document.getElementById('app'),
-        });
+        const app = mount(App, { target: document.getElementById("app") });
     } else {
         console.error("Failed to initialize Lightbox API service.");
         // 可以考虑在这里显示一个错误消息给用户

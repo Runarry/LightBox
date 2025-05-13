@@ -83,7 +83,7 @@ namespace LightBox.WPF
                                 CoreWebView2HostResourceAccessKind.Allow 
                             );
                             _logger.LogInfo("InitializeWebViewAsync - Navigating to https://lightbox.app.local/index.html");
-                            webView.CoreWebView2.Navigate("http://lightbox.app.local/index.html");
+                            webView.CoreWebView2.Navigate("http://localhost:5173");
                         }
                         else
                         {
