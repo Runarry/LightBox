@@ -119,8 +119,8 @@ namespace LightBox.Core.Tests
             {
                 PluginScanDirectories = new List<string>
                 {
-                    // 相对于测试程序的路径，指向TestPlugins目录
-                    Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "..", "TestPlugins")
+                    // 确保路径正确指向TestPlugins目录
+                    Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "..", "TestPlugins", "PluginA")
                 }
             };
         }
