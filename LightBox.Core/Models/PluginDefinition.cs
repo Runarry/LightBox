@@ -22,7 +22,8 @@ namespace LightBox.Core.Models
         public string Author { get; set; } = string.Empty;
 
         [JsonPropertyName("plugin_type")]
-        public string PluginType { get; set; } = string.Empty; // e.g., "executable", "dotnet_library"
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public PluginType Type { get; set; } = PluginType.CSharpLibrary; // Default to CSharpLibrary
 
         [JsonPropertyName("executable")]
         public string? Executable { get; set; }

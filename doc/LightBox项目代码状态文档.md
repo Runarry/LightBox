@@ -72,6 +72,28 @@ LightBox/
 - **暴露类型**:
   - 插件元数据如ID、名称、版本、类型等
 
+##### PluginType.cs
+- **已实现**: 插件类型枚举
+- **暴露类型**:
+  - `CSharpLibrary`: C#库插件
+  - `ExternalProcess`: 外部进程插件
+
+##### PluginInstanceStatus.cs
+- **已实现**: 插件实例状态枚举
+- **暴露类型**:
+  - 描述插件实例生命周期的各个状态（如Created, Initializing, Running, Stopped等）
+
+##### PluginInstance.cs
+- **已实现**: 插件实例模型
+- **暴露类型**:
+  - 插件实例属性包括ID、状态、配置、时间戳等
+  - 内部引用C#库插件对象或外部进程
+
+##### PluginInstanceInfo.cs
+- **已实现**: 插件实例信息模型（用于API返回）
+- **暴露类型**:
+  - 插件实例的摘要信息，如ID、名称、状态等
+
 #### Services/Interfaces/
 
 ##### ILoggingService.cs
@@ -94,7 +116,8 @@ LightBox/
 ##### IPluginService.cs
 - **已实现**: 插件服务接口
 - **暴露接口**:
-  - 插件发现和管理方法
+  - 插件发现方法
+  - 插件实例生命周期管理方法
 
 #### Services/Implementations/
 
@@ -118,9 +141,10 @@ LightBox/
 - **已实现**: 插件管理服务
 - **实现接口**: `IPluginService`
 - **主要功能**:
-  - 插件发现
-  - 插件加载
-  - 插件实例管理
+  - 插件发现与加载
+  - 插件实例创建与初始化
+  - C#库插件和外部进程插件生命周期管理
+  - 插件实例状态跟踪
 
 ### LightBox.WPF
 
@@ -220,7 +244,20 @@ public interface IWorkspaceService
 public interface IPluginService
 {
     Task<List<PluginDefinition>> DiscoverPluginsAsync();
-    // 插件实例管理方法
+    Task<PluginDefinition?> GetPluginDefinitionByIdAsync(string pluginId);
+    
+    // 插件实例生命周期管理
+    Task<PluginInstanceInfo> CreatePluginInstanceAsync(string pluginId, string workspaceId, string initialConfigurationJson);
+    Task<bool> InitializePluginInstanceAsync(string instanceId);
+    Task<bool> StartPluginInstanceAsync(string instanceId);
+    Task<bool> StopPluginInstanceAsync(string instanceId);
+    Task<bool> DisposePluginInstanceAsync(string instanceId);
+    
+    // 插件实例查询
+    Task<PluginInstanceStatus> GetPluginInstanceStatusAsync(string instanceId);
+    Task<PluginInstanceInfo> GetPluginInstanceInfoAsync(string instanceId);
+    Task<IEnumerable<PluginInstanceInfo>> GetPluginInstancesByWorkspaceAsync(string workspaceId);
+    Task<IEnumerable<PluginInstanceInfo>> GetAllActivePluginInstancesAsync();
 }
 ```
 
@@ -250,12 +287,14 @@ deleteWorkspace(workspaceId)
 - 工作区管理功能
 - JavaScript桥接机制
 - 应用设置管理
+- 插件实例生命周期管理
 
 ### 部分完成的模块
-- 插件实例化和生命周期管理
 - 测试插件实现
+- JavaScript前端对插件实例管理的调用
 
 ### 待完成的模块
 - 完整的WebView UI实现
 - 动态配置表单
 - 插件通信机制的完整实现 
+- JavaScript桥接插件实例生命周期管理API的暴露 
