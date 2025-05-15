@@ -4,6 +4,7 @@ using System.IO;
 using System.Threading.Tasks;
 using LightBox.Core.Services.Implementations;
 using LightBox.Core.Services.Interfaces;
+using LightBox.PluginContracts;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace LightBox.Core.Tests
@@ -43,6 +44,28 @@ namespace LightBox.Core.Tests
     /// </summary>
     public class ConsoleLogger : ILoggingService
     {
+        public void Log(LogLevel level, string message, Exception exception = null)
+        {
+            switch (level)
+            {
+                case LogLevel.Debug:
+                    LogDebug(message);
+                    break;
+                case LogLevel.Info:
+                    LogInfo(message);
+                    break;
+                case LogLevel.Warning:
+                    LogWarning(message, exception);
+                    break;
+                case LogLevel.Error:
+                    LogError(message, exception);
+                    break;
+                default:
+                    LogInfo(message);
+                    break;
+            }
+        }
+
         public void LogError(string message, Exception exception = null)
         {
             var originalColor = Console.ForegroundColor;
@@ -53,12 +76,19 @@ namespace LightBox.Core.Tests
             Console.ForegroundColor = originalColor;
         }
 
-        public void LogWarning(string message)
+        public void LogWarning(string message, Exception exception = null)
         {
             var originalColor = Console.ForegroundColor;
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine($"[WARNING] {message}");
+            if (exception != null)
+                Console.WriteLine($"  Exception: {exception.Message}");
             Console.ForegroundColor = originalColor;
+        }
+
+        public void LogWarning(string message)
+        {
+            LogWarning(message, null);
         }
 
         public void LogInfo(string message)
