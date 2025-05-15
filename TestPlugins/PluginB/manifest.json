@@ -1,19 +1,18 @@
 {
-  "id": "com.example.pluginB",
-  "name": "Plugin B (CSharp)",
-  "version": "0.9.0",
-  "description": "A C# library plugin example.",
-  "author": "Another Dev",
-  "plugin_type": "csharp_library",
-  "executable": "PluginB.dll",
-  "entry_point": "PluginB.MyPluginClass",
+  "id": "test-plugin-b",
+  "name": "Test Plugin B",
+  "version": "1.0.0",
+  "description": "A test external process plugin for LightBox",
+  "author": "LightBox Team",
+  "plugin_type": "ExternalProcess",
+  "executable": "cmd.exe",
+  "args_template": "/c echo Plugin B Started with Instance ID: {instanceId} and Config: {configPath} && timeout /t 10",
   "config_schema": {
     "type": "object",
-    "title": "Plugin B Configuration",
+    "title": "Plugin B Settings",
     "properties": {
-      "connectionString": { "type": "string", "title": "Connection String" },
-      "timeout": { "type": "integer", "title": "Timeout (ms)", "default": 5000 }
+      "setting1": { "type": "string", "title": "Setting One" },
+      "enabled": { "type": "boolean", "title": "Enabled", "default": false }
     }
-  },
-  "icon": "icons/plugin_b.svg"
+  }
 }
