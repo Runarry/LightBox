@@ -5,6 +5,6 @@
   "description": "A test C# library plugin for LightBox",
   "author": "LightBox Team",
   "plugin_type": "CSharpLibrary",
-  "assembly_path": "./plugins/TestPluginA.dll",
-  "main_class": "TestPluginA.TestPlugin"
+  "assembly_path": "plugins/net9.0/PluginA.dll", 
+  "main_class": "TestPluginA.Plugin"
 }

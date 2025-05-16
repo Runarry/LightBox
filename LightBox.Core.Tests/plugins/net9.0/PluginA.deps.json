@@ -1,0 +1,39 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v9.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v9.0": {
+      "PluginA/1.0.0": {
+        "dependencies": {
+          "LightBox.PluginContracts": "1.0.0"
+        },
+        "runtime": {
+          "PluginA.dll": {}
+        }
+      },
+      "LightBox.PluginContracts/1.0.0": {
+        "runtime": {
+          "LightBox.PluginContracts.dll": {
+            "assemblyVersion": "1.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "PluginA/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "LightBox.PluginContracts/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}
