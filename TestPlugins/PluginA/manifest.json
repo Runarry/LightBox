@@ -1,48 +1,23 @@
 {
-  "id": "test-plugin-a",
-  "name": "Test Plugin A",
+  "id": "test.plugin.a",
+  "name": "Test Plugin A (C# Library)",
   "version": "1.0.0",
-  "description": "A test C# library plugin for LightBox",
+  "description": "A test C# library plugin for LightBox.",
   "author": "LightBox Team",
-  "plugin_type": "CSharpLibrary",
-  "assembly_path": "plugins/net9.0/PluginA.dll", 
-  "main_class": "TestPluginA.Plugin",
+  "plugin_type": "csharp_library",
+  "entry_point": {
+    "assembly_path": "PluginA.dll",
+    "main_class": "TestPlugins.PluginA.Plugin"
+  },
   "config_schema": {
     "type": "object",
     "properties": {
-      "name": {
+      "messagePrefix": {
         "type": "string",
-        "description": "Name of the plugin instance",
-        "default": "Default Instance"
-      },
-      "enabled": {
-        "type": "boolean",
-        "description": "Whether the plugin is enabled",
-        "default": true
-      },
-      "refreshInterval": {
-        "type": "integer",
-        "description": "Refresh interval in seconds",
-        "minimum": 5,
-        "maximum": 3600,
-        "default": 60
-      },
-      "advancedSettings": {
-        "type": "object",
-        "properties": {
-          "debug": {
-            "type": "boolean",
-            "description": "Enable debug mode",
-            "default": false
-          },
-          "maxItems": {
-            "type": "integer",
-            "description": "Maximum number of items to process",
-            "default": 100
-          }
-        }
+        "title": "Message Prefix",
+        "description": "A prefix for messages logged by PluginA.",
+        "default": "PluginA:"
       }
-    },
-    "required": ["name", "enabled"]
+    }
   }
 }

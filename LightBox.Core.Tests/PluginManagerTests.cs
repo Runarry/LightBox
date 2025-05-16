@@ -6,6 +6,10 @@ using LightBox.Core.Services.Implementations;
 using LightBox.Core.Services.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using System.IO;
+using System.Net.Http;
+using System.Diagnostics;
+using System.Text.Json;
+using System.Text;
 
 namespace LightBox.Core.Tests
 {
@@ -15,6 +19,7 @@ namespace LightBox.Core.Tests
         private readonly IPluginService _pluginManager;
         private readonly ILoggingService _logger;
         private readonly IApplicationSettingsService _applicationSettingsService;
+        private readonly HttpClient _httpClient;
 
         public PluginManagerTests(IServiceProvider serviceProvider)
         {
@@ -22,6 +27,7 @@ namespace LightBox.Core.Tests
             _pluginManager = _serviceProvider.GetRequiredService<IPluginService>();
             _logger = _serviceProvider.GetRequiredService<ILoggingService>();
             _applicationSettingsService = _serviceProvider.GetRequiredService<IApplicationSettingsService>();
+            _httpClient = new HttpClient();
         }
 
         public async Task RunAllTests()
@@ -33,7 +39,12 @@ namespace LightBox.Core.Tests
                 await TestDiscoverPlugins();
                 await TestPluginLifecycle();
                 await TestMultipleInstances();
-
+                
+                // New tests for PluginA and PluginB
+                await TestDiscoverPluginsA_And_B();
+                await TestPluginA_Commands();
+                await TestPluginB_Process();
+                
                 _logger.LogInfo("All PluginManager tests completed successfully.");
             }
             catch (Exception ex)
@@ -239,6 +250,238 @@ namespace LightBox.Core.Tests
             await _pluginManager.DisposePluginInstanceAsync(instance3.InstanceId);
             
             _logger.LogInfo("Multiple instances test completed successfully");
+        }
+
+        // New test methods for PluginA and PluginB
+
+        private async Task TestDiscoverPluginsA_And_B()
+        {
+            _logger.LogInfo("========== Testing PluginA and PluginB Discovery ==========");
+
+            var plugins = await _pluginManager.DiscoverPluginsAsync();
+            
+            // Check if PluginA and PluginB are in the discovered plugins
+            var pluginA = plugins.FirstOrDefault(p => p.Id == "test.plugin.a");
+            var pluginB = plugins.FirstOrDefault(p => p.Id == "test.plugin.b");
+            
+            if (pluginA == null)
+            {
+                _logger.LogError("PluginA (test.plugin.a) was not found in discovered plugins.");
+                throw new InvalidOperationException("PluginA not found");
+            }
+            
+            if (pluginB == null)
+            {
+                _logger.LogError("PluginB (test.plugin.b) was not found in discovered plugins.");
+                throw new InvalidOperationException("PluginB not found");
+            }
+            
+            _logger.LogInfo($"Found PluginA: {pluginA.Name} (Type: {pluginA.Type})");
+            _logger.LogInfo($"Found PluginB: {pluginB.Name} (Type: {pluginB.Type})");
+            
+            // Verify properties from manifest
+            if (pluginA.Name != "Test Plugin A (C# Library)")
+            {
+                _logger.LogError($"PluginA name mismatch. Expected: 'Test Plugin A (C# Library)', Got: '{pluginA.Name}'");
+            }
+            
+            if (pluginB.Name != "Test Plugin B (External Process)")
+            {
+                _logger.LogError($"PluginB name mismatch. Expected: 'Test Plugin B (External Process)', Got: '{pluginB.Name}'");
+            }
+            
+            _logger.LogInfo("PluginA and PluginB discovery test passed.");
+        }
+        
+        private async Task TestPluginA_Commands()
+        {
+            _logger.LogInfo("========== Testing PluginA Commands ==========");
+            
+            // First discover plugins
+            var plugins = await _pluginManager.DiscoverPluginsAsync();
+            var pluginA = plugins.FirstOrDefault(p => p.Id == "test.plugin.a");
+            
+            if (pluginA == null)
+            {
+                _logger.LogError("PluginA not found for command test.");
+                throw new InvalidOperationException("PluginA not found");
+            }
+            
+            const string workspaceId = "test-workspace-commands";
+            string configJson = "{\"messagePrefix\": \"TestPrefix:\"}";
+            
+            // Create and initialize the plugin instance
+            _logger.LogInfo("Creating PluginA instance...");
+            var instanceInfo = await _pluginManager.CreatePluginInstanceAsync(pluginA.Id, workspaceId, configJson);
+            
+            _logger.LogInfo($"PluginA instance created: {instanceInfo.InstanceId} (Status: {instanceInfo.Status})");
+            
+            // Initialize the plugin instance
+            _logger.LogInfo("Initializing PluginA instance...");
+            var initResult = await _pluginManager.InitializePluginInstanceAsync(instanceInfo.InstanceId);
+            
+            if (!initResult)
+            {
+                _logger.LogError("Failed to initialize PluginA instance");
+                throw new InvalidOperationException("PluginA initialization failed");
+            }
+            
+            // Start the plugin instance
+            _logger.LogInfo("Starting PluginA instance...");
+            var startResult = await _pluginManager.StartPluginInstanceAsync(instanceInfo.InstanceId);
+            
+            if (!startResult)
+            {
+                _logger.LogError("Failed to start PluginA instance");
+                throw new InvalidOperationException("PluginA start failed");
+            }
+            
+            // Test echo command
+            _logger.LogInfo("Testing 'echo' command...");
+            var echoPayload = "Hello, Plugin!";
+            var echoResult = await _pluginManager.ExecuteCommandAsync(instanceInfo.InstanceId, "echo", echoPayload);
+            
+            _logger.LogInfo($"Echo command result: {echoResult}");
+            if (echoResult?.ToString() != $"PluginA echoes: {echoPayload}")
+            {
+                _logger.LogError($"Echo command failed. Expected: 'PluginA echoes: {echoPayload}', Got: '{echoResult}'");
+            }
+            
+            // Test add command with valid payload
+            _logger.LogInfo("Testing 'add' command with valid payload...");
+            var addPayload = JsonSerializer.Serialize(new { a = 5, b = 3 });
+            var addResult = await _pluginManager.ExecuteCommandAsync(instanceInfo.InstanceId, "add", addPayload);
+            
+            _logger.LogInfo($"Add command result: {addResult}");
+            if (Convert.ToInt32(addResult) != 8)
+            {
+                _logger.LogError($"Add command failed. Expected: 8, Got: '{addResult}'");
+            }
+            
+            // Test add command with invalid payload
+            _logger.LogInfo("Testing 'add' command with invalid payload...");
+            var invalidPayload = JsonSerializer.Serialize(new { x = 5, y = 3 });
+            var invalidResult = await _pluginManager.ExecuteCommandAsync(instanceInfo.InstanceId, "add", invalidPayload);
+            
+            _logger.LogInfo($"Add command with invalid payload result: {invalidResult}");
+            if (!invalidResult.ToString().Contains("Invalid payload"))
+            {
+                _logger.LogError($"Add command with invalid payload should return error message. Got: '{invalidResult}'");
+            }
+            
+            // Test unknown command
+            _logger.LogInfo("Testing unknown command...");
+            var unknownResult = await _pluginManager.ExecuteCommandAsync(instanceInfo.InstanceId, "unknown", "test");
+            
+            _logger.LogInfo($"Unknown command result: {unknownResult}");
+            if (!unknownResult.ToString().Contains("Unknown command"))
+            {
+                _logger.LogError($"Unknown command should return error message. Got: '{unknownResult}'");
+            }
+            
+            // Stop the plugin instance
+            _logger.LogInfo("Stopping PluginA instance...");
+            var stopResult = await _pluginManager.StopPluginInstanceAsync(instanceInfo.InstanceId);
+            
+            if (!stopResult)
+            {
+                _logger.LogError("Failed to stop PluginA instance");
+            }
+            
+            // Dispose the plugin instance
+            await _pluginManager.DisposePluginInstanceAsync(instanceInfo.InstanceId);
+            
+            _logger.LogInfo("PluginA commands test completed.");
+        }
+        
+        private async Task TestPluginB_Process()
+        {
+            _logger.LogInfo("========== Testing PluginB Process ==========");
+            
+            // First discover plugins
+            var plugins = await _pluginManager.DiscoverPluginsAsync();
+            var pluginB = plugins.FirstOrDefault(p => p.Id == "test.plugin.b");
+            
+            if (pluginB == null)
+            {
+                _logger.LogError("PluginB not found for process test.");
+                throw new InvalidOperationException("PluginB not found");
+            }
+            
+            const string workspaceId = "test-workspace-process";
+            string configJson = "{\"port\": 8092, \"startupMessage\": \"PluginB Test\"}";
+            
+            // Create the plugin instance
+            _logger.LogInfo("Creating PluginB instance...");
+            var instanceInfo = await _pluginManager.CreatePluginInstanceAsync(pluginB.Id, workspaceId, configJson);
+            
+            _logger.LogInfo($"PluginB instance created: {instanceInfo.InstanceId} (Status: {instanceInfo.Status})");
+            
+            // Wait a bit for the process to start and HTTP server to initialize
+            await Task.Delay(2000);
+            
+            // Test HTTP endpoint
+            try
+            {
+                _logger.LogInfo("Testing PluginB HTTP endpoint...");
+                var response = await _httpClient.GetStringAsync("http://localhost:8092/ping");
+                _logger.LogInfo($"PluginB HTTP response: {response}");
+                
+                if (!response.Contains("PluginB") || !response.Contains("pong"))
+                {
+                    _logger.LogError($"Unexpected response from PluginB: {response}");
+                }
+                else
+                {
+                    _logger.LogInfo("PluginB HTTP endpoint test passed.");
+                }
+                
+                // Test config endpoint
+                var configResponse = await _httpClient.GetStringAsync("http://localhost:8092/config");
+                _logger.LogInfo($"PluginB config endpoint response: {configResponse}");
+                
+                if (!configResponse.Contains("config endpoint"))
+                {
+                    _logger.LogError($"Unexpected response from PluginB config endpoint: {configResponse}");
+                }
+                else
+                {
+                    _logger.LogInfo("PluginB config endpoint test passed.");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error testing PluginB HTTP endpoint: {ex.Message}");
+            }
+            
+            // Stop the plugin instance
+            _logger.LogInfo("Stopping PluginB instance...");
+            var stopResult = await _pluginManager.StopPluginInstanceAsync(instanceInfo.InstanceId);
+            
+            if (!stopResult)
+            {
+                _logger.LogError("Failed to stop PluginB instance");
+            }
+            
+            // Wait a bit for the process to stop
+            await Task.Delay(1000);
+            
+            // Verify process is terminated
+            try
+            {
+                _logger.LogInfo("Verifying PluginB process is terminated...");
+                var response = await _httpClient.GetStringAsync("http://localhost:8092/ping");
+                _logger.LogError("PluginB process is still running after stop!");
+            }
+            catch (HttpRequestException)
+            {
+                _logger.LogInfo("PluginB process successfully terminated.");
+            }
+            
+            // Dispose the plugin instance
+            await _pluginManager.DisposePluginInstanceAsync(instanceInfo.InstanceId);
+            
+            _logger.LogInfo("PluginB process test completed.");
         }
     }
 } 

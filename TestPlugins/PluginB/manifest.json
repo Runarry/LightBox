@@ -1,18 +1,38 @@
 {
-  "id": "test-plugin-b",
-  "name": "Test Plugin B",
+  "id": "test.plugin.b",
+  "name": "Test Plugin B (External Process)",
   "version": "1.0.0",
-  "description": "A test external process plugin for LightBox",
+  "description": "A test external process plugin for LightBox.",
   "author": "LightBox Team",
-  "plugin_type": "ExternalProcess",
-  "executable": "cmd.exe",
-  "args_template": "/c echo Plugin B Started with Instance ID: {instanceId} and Config: {configPath} && timeout /t 10",
+  "plugin_type": "external_process",
+  "entry_point": {
+    "executable": "PluginB.exe",
+    "args_template": "--port {{config.port}} --instance-id {{instance_id}} --config-file {{temp_config_file_path}}"
+  },
   "config_schema": {
     "type": "object",
-    "title": "Plugin B Settings",
     "properties": {
-      "setting1": { "type": "string", "title": "Setting One" },
-      "enabled": { "type": "boolean", "title": "Enabled", "default": false }
-    }
+      "port": {
+        "type": "integer",
+        "title": "HTTP Port",
+        "description": "The port PluginB will listen on.",
+        "default": 8091,
+        "minimum": 1024,
+        "maximum": 65535
+      },
+      "startupMessage": {
+        "type": "string",
+        "title": "Startup Message",
+        "description": "A message to include in the startup log.",
+        "default": "PluginB is starting up!"
+      }
+    },
+    "required": [
+      "port"
+    ]
+  },
+  "communication": {
+    "type": "http",
+    "base_url_template": "http://localhost:{{config.port}}"
   }
 }
