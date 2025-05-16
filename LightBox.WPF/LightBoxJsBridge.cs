@@ -13,18 +13,21 @@ namespace LightBox.WPF
         private readonly IApplicationSettingsService _applicationSettingsService;
         private readonly IPluginService _pluginService;
         private readonly ILoggingService _loggingService;
-        private readonly IWorkspaceService _workspaceService; // Added
+        private readonly IWorkspaceService _workspaceService;
+        private readonly IConfigurationService _configurationService;
 
         public LightBoxJsBridge(
             IApplicationSettingsService applicationSettingsService,
             IPluginService pluginService,
             ILoggingService loggingService,
-            IWorkspaceService workspaceService) // Added
+            IWorkspaceService workspaceService,
+            IConfigurationService configurationService)
         {
             _applicationSettingsService = applicationSettingsService ?? throw new ArgumentNullException(nameof(applicationSettingsService));
             _pluginService = pluginService ?? throw new ArgumentNullException(nameof(pluginService));
             _loggingService = loggingService ?? throw new ArgumentNullException(nameof(loggingService));
-            _workspaceService = workspaceService ?? throw new ArgumentNullException(nameof(workspaceService)); // Added
+            _workspaceService = workspaceService ?? throw new ArgumentNullException(nameof(workspaceService));
+            _configurationService = configurationService ?? throw new ArgumentNullException(nameof(configurationService));
         }
 
         public async Task<string> GetApplicationSettings()
@@ -222,6 +225,71 @@ namespace LightBox.WPF
             {
                 _loggingService.LogError($"Error in DeleteWorkspace (ID: {workspaceId}): {ex.Message}", ex);
                 throw;
+            }
+        }
+
+        // Plugin Configuration Management Methods
+        public string ValidatePluginConfiguration(string pluginId, string configJson)
+        {
+            _loggingService.LogInfo($"LightBoxJsBridge.ValidatePluginConfiguration CALLED for plugin {pluginId}");
+            try
+            {
+                if (string.IsNullOrWhiteSpace(pluginId))
+                {
+                    throw new ArgumentNullException(nameof(pluginId), "Plugin ID cannot be null or empty.");
+                }
+                
+                var validationResult = _configurationService.ValidateConfiguration(pluginId, configJson);
+                return JsonSerializer.Serialize(validationResult);
+            }
+            catch (Exception ex)
+            {
+                _loggingService.LogError($"Error in ValidatePluginConfiguration: {ex.Message}", ex);
+                return JsonSerializer.Serialize(new ValidationResult
+                {
+                    IsValid = false,
+                    ErrorMessage = $"Error validating configuration: {ex.Message}"
+                });
+            }
+        }
+
+        public string GetDefaultPluginConfiguration(string pluginId)
+        {
+            _loggingService.LogInfo($"LightBoxJsBridge.GetDefaultPluginConfiguration CALLED for plugin {pluginId}");
+            try
+            {
+                if (string.IsNullOrWhiteSpace(pluginId))
+                {
+                    throw new ArgumentNullException(nameof(pluginId), "Plugin ID cannot be null or empty.");
+                }
+                
+                var defaultConfig = _configurationService.GetDefaultConfiguration(pluginId);
+                return defaultConfig;
+            }
+            catch (Exception ex)
+            {
+                _loggingService.LogError($"Error in GetDefaultPluginConfiguration: {ex.Message}", ex);
+                return JsonSerializer.Serialize(new { error = $"Failed to get default configuration: {ex.Message}" });
+            }
+        }
+
+        public string ResetPluginConfiguration(string pluginId)
+        {
+            _loggingService.LogInfo($"LightBoxJsBridge.ResetPluginConfiguration CALLED for plugin {pluginId}");
+            try
+            {
+                if (string.IsNullOrWhiteSpace(pluginId))
+                {
+                    throw new ArgumentNullException(nameof(pluginId), "Plugin ID cannot be null or empty.");
+                }
+                
+                var resetConfig = _configurationService.ResetConfiguration(pluginId);
+                return resetConfig;
+            }
+            catch (Exception ex)
+            {
+                _loggingService.LogError($"Error in ResetPluginConfiguration: {ex.Message}", ex);
+                return JsonSerializer.Serialize(new { error = $"Failed to reset configuration: {ex.Message}" });
             }
         }
     }

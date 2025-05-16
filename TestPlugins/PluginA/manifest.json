@@ -6,5 +6,43 @@
   "author": "LightBox Team",
   "plugin_type": "CSharpLibrary",
   "assembly_path": "plugins/net9.0/PluginA.dll", 
-  "main_class": "TestPluginA.Plugin"
+  "main_class": "TestPluginA.Plugin",
+  "config_schema": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string",
+        "description": "Name of the plugin instance",
+        "default": "Default Instance"
+      },
+      "enabled": {
+        "type": "boolean",
+        "description": "Whether the plugin is enabled",
+        "default": true
+      },
+      "refreshInterval": {
+        "type": "integer",
+        "description": "Refresh interval in seconds",
+        "minimum": 5,
+        "maximum": 3600,
+        "default": 60
+      },
+      "advancedSettings": {
+        "type": "object",
+        "properties": {
+          "debug": {
+            "type": "boolean",
+            "description": "Enable debug mode",
+            "default": false
+          },
+          "maxItems": {
+            "type": "integer",
+            "description": "Maximum number of items to process",
+            "default": 100
+          }
+        }
+      }
+    },
+    "required": ["name", "enabled"]
+  }
 }

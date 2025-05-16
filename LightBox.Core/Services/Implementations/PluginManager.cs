@@ -18,6 +18,7 @@ namespace LightBox.Core.Services.Implementations
     {
         private readonly IApplicationSettingsService _settingsService;
         private readonly ILoggingService _loggingService;
+        private readonly IConfigurationService _configurationService;
         private List<PluginDefinition> _discoveredPlugins = new List<PluginDefinition>();
         private static readonly JsonSerializerOptions _jsonSerializerOptions = new JsonSerializerOptions
         {
@@ -28,10 +29,13 @@ namespace LightBox.Core.Services.Implementations
         // Store active plugin instances in a thread-safe dictionary
         private readonly ConcurrentDictionary<string, PluginInstance> _activeInstances = new ConcurrentDictionary<string, PluginInstance>();
 
-        public PluginManager(IApplicationSettingsService settingsService, ILoggingService loggingService)
+        public PluginManager(IApplicationSettingsService settingsService, 
+                            ILoggingService loggingService, 
+                            IConfigurationService configurationService)
         {
             _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
             _loggingService = loggingService ?? throw new ArgumentNullException(nameof(loggingService));
+            _configurationService = configurationService ?? throw new ArgumentNullException(nameof(configurationService));
         }
 
         public async Task<List<PluginDefinition>> DiscoverPluginsAsync()
@@ -141,6 +145,20 @@ namespace LightBox.Core.Services.Implementations
                 if (pluginDefinition == null)
                 {
                     throw new ArgumentException($"Plugin with ID '{pluginId}' was not found.");
+                }
+
+                // Validate the configuration
+                var validationResult = _configurationService.ValidateConfiguration(pluginId, initialConfigurationJson);
+                if (!validationResult.IsValid)
+                {
+                    throw new InvalidOperationException($"Invalid configuration: {validationResult.ErrorMessage}");
+                }
+
+                // If configuration is empty or null, use default configuration
+                if (string.IsNullOrWhiteSpace(initialConfigurationJson) || initialConfigurationJson == "{}")
+                {
+                    initialConfigurationJson = _configurationService.GetDefaultConfiguration(pluginId);
+                    _loggingService.LogInfo($"Using default configuration for plugin {pluginId}");
                 }
 
                 // Create plugin instance
@@ -341,10 +359,11 @@ namespace LightBox.Core.Services.Implementations
                             throw new InvalidOperationException($"Plugin definition with ID '{instance.PluginId}' has no executable specified.");
                         }
 
-                        // Prepare configuration file if needed
-                        var tempConfigFilePath = Path.Combine(Path.GetTempPath(), $"lightbox_plugin_{instance.InstanceId}_config.json");
-                        File.WriteAllText(tempConfigFilePath, instance.ConfigurationJson);
-                        instance.TempConfigFilePath = tempConfigFilePath;
+                        // Prepare configuration file using ConfigurationService
+                        instance.TempConfigFilePath = _configurationService.GenerateTempConfigFile(
+                            instance.PluginId, 
+                            instance.InstanceId, 
+                            instance.ConfigurationJson);
 
                         // Format arguments
                         string formattedArgs = string.Empty;
@@ -352,7 +371,7 @@ namespace LightBox.Core.Services.Implementations
                         {
                             formattedArgs = pluginDefinition.ArgsTemplate
                                 .Replace("{instanceId}", instance.InstanceId)
-                                .Replace("{configPath}", tempConfigFilePath)
+                                .Replace("{configPath}", instance.TempConfigFilePath)
                                 .Replace("{workspaceId}", instance.WorkspaceId);
                         }
 

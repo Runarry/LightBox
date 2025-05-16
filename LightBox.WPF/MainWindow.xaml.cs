@@ -16,17 +16,21 @@ namespace LightBox.WPF
     {
         private readonly ILoggingService _logger;
         private readonly IApplicationSettingsService _applicationSettingsService;
+        private readonly IConfigurationService _configurationService;
         private readonly IPluginService _pluginService;
-        private readonly IWorkspaceService _workspaceService; // Added
-        private LightBoxJsBridge? _jsBridge; // <--- Declare as a field
+        private readonly IWorkspaceService _workspaceService;
+        private LightBoxJsBridge? _jsBridge;
 
         public MainWindow()
         {
             // Instantiate services
-            _logger = new SimpleFileLogger(); // Assuming default constructor or provide path
-            _applicationSettingsService = new ApplicationSettingsService(_logger); // Pass logger
-            _pluginService = new PluginManager(_applicationSettingsService, _logger); // Pass both services
-            _workspaceService = new WorkspaceManager(_applicationSettingsService, _logger); // Added
+            _logger = new SimpleFileLogger();
+            _applicationSettingsService = new ApplicationSettingsService(_logger);
+            _configurationService = new ConfigurationService(null, _logger); // Temporary null to break circular reference
+            _pluginService = new PluginManager(_applicationSettingsService, _logger, _configurationService);
+            // Update configuration service with the plugin service
+            ((ConfigurationService)_configurationService).PluginService = _pluginService;
+            _workspaceService = new WorkspaceManager(_applicationSettingsService, _logger);
 
             _logger.LogInfo("MainWindow constructor - Start, services instantiated.");
             InitializeComponent();
@@ -64,9 +68,8 @@ namespace LightBox.WPF
                     webView.CoreWebView2.WebMessageReceived += CoreWebView2_WebMessageReceived; // Subscribe to WebMessageReceived
                     webView.CoreWebView2.NavigationCompleted += CoreWebView2_NavigationCompleted; // Keep this for potential DevTools opening
 
-                    // --- Remove AddHostObjectToScript logic ---
                     // Ensure _jsBridge is initialized here or somewhere accessible by the message handler
-                    _jsBridge = new LightBoxJsBridge(_applicationSettingsService, _pluginService, _logger, _workspaceService); // Added _workspaceService
+                    _jsBridge = new LightBoxJsBridge(_applicationSettingsService, _pluginService, _logger, _workspaceService, _configurationService);
 
                     string? exePath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
                     if (!string.IsNullOrEmpty(exePath))
@@ -206,6 +209,24 @@ namespace LightBox.WPF
                             await _jsBridge.DeleteWorkspace(deleteArgs.WorkspaceId);
                             resultJson = JsonSerializer.Serialize(new { success = true });
                             break;
+                        case "validatePluginConfiguration":
+                            var validateArgs = JsonSerializer.Deserialize<PluginConfigArgs>(message.Payload ?? "{}");
+                            if (validateArgs == null || string.IsNullOrEmpty(validateArgs.PluginId))
+                                throw new ArgumentException("Invalid payload for validatePluginConfiguration. PluginId is required.");
+                            resultJson = _jsBridge.ValidatePluginConfiguration(validateArgs.PluginId, validateArgs.ConfigJson ?? "{}");
+                            break;
+                        case "getDefaultPluginConfiguration":
+                            var defaultConfigArgs = JsonSerializer.Deserialize<PluginIdArgs>(message.Payload ?? "{}");
+                            if (defaultConfigArgs == null || string.IsNullOrEmpty(defaultConfigArgs.PluginId))
+                                throw new ArgumentException("Invalid payload for getDefaultPluginConfiguration. PluginId is required.");
+                            resultJson = _jsBridge.GetDefaultPluginConfiguration(defaultConfigArgs.PluginId);
+                            break;
+                        case "resetPluginConfiguration":
+                            var resetConfigArgs = JsonSerializer.Deserialize<PluginIdArgs>(message.Payload ?? "{}");
+                            if (resetConfigArgs == null || string.IsNullOrEmpty(resetConfigArgs.PluginId))
+                                throw new ArgumentException("Invalid payload for resetPluginConfiguration. PluginId is required.");
+                            resultJson = _jsBridge.ResetPluginConfiguration(resetConfigArgs.PluginId);
+                            break;
                         default:
                             throw new NotSupportedException($"Command '{message.Command}' is not supported.");
                     }
@@ -269,6 +290,17 @@ namespace LightBox.WPF
     internal class DeleteWorkspaceArgs
     {
         public string WorkspaceId { get; set; } = string.Empty;
+    }
+
+    internal class PluginIdArgs
+    {
+        public string PluginId { get; set; } = string.Empty;
+    }
+
+    internal class PluginConfigArgs
+    {
+        public string PluginId { get; set; } = string.Empty;
+        public string? ConfigJson { get; set; }
     }
 
 } // This closes the namespace

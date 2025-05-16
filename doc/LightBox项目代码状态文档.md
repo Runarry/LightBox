@@ -78,6 +78,25 @@ LightBox/
   - `CSharpLibrary`: C#库插件
   - `ExternalProcess`: 外部进程插件
 
+##### Configuration（配置管理）
+
+- **已实现**: 插件配置管理接口与实现
+- **主要文件**:
+  - [`IConfigurationService.cs`](LightBox.Core/Services/Interfaces/IConfigurationService.cs): 配置管理接口，暴露 ValidateConfiguration、GetDefaultConfiguration、ResetConfiguration、GenerateTempConfigFile 等方法
+  - [`ConfigurationService.cs`](LightBox.Core/Services/Implementations/ConfigurationService.cs): 配置管理实现，支持 JSON Schema 校验、默认值生成、临时配置文件写入
+  - [`PluginDefinition.cs`](LightBox.Core/Models/PluginDefinition.cs): 支持 config_schema 字段，类型为 JsonElement
+  - [`PluginInstance.cs`](LightBox.Core/Models/PluginInstance.cs): 存储插件实例配置
+  - [`Workspace.cs`](LightBox.Core/Models/Workspace.cs): 支持插件实例配置序列化
+- **主要功能**:
+  - 插件配置 JSON Schema 校验（ValidateConfiguration）
+  - 默认配置生成与一键重置（GetDefaultConfiguration/ResetConfiguration）
+  - 外部进程插件临时配置文件生成（GenerateTempConfigFile）
+  - 配置变更、实例创建、插件启动等流程中自动校验与填充默认值
+- **前后端联动**:
+  - WPF 层通过 LightBoxJsBridge 暴露 ValidatePluginConfiguration、GetDefaultPluginConfiguration、ResetPluginConfiguration 等方法
+  - 前端可通过 lightboxApi.js 调用相关 API
+
+
 ##### PluginInstanceStatus.cs
 - **已实现**: 插件实例状态枚举
 - **暴露类型**:
